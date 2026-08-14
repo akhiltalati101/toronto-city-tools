@@ -5,3 +5,4 @@ claude-plans
 city-scorecard/__pycache__
 city-scorecard/.citydata_cache/
 city-scorecard/build*/
+city-scorecard/.streamlit/secrets.toml

@@ -15,6 +15,29 @@ CATEGORY_LABELS = {
 
 st.set_page_config(page_title="City Scorecard", page_icon="🏙️", layout="wide")
 
+
+def _check_password() -> bool:
+    """Gate the app behind a shared password stored in st.secrets.
+
+    Cold-start data download + per-request graph/isochrone compute are
+    expensive enough that the app shouldn't sit at a fully open public URL.
+    """
+    if st.session_state.get("authed"):
+        return True
+
+    entered = st.text_input("Password", type="password")
+    if entered:
+        if entered == st.secrets.get("app_password"):
+            st.session_state.authed = True
+            st.rerun()
+        else:
+            st.error("Incorrect password.")
+    return False
+
+
+if not _check_password():
+    st.stop()
+
 st.title("🏙️ City Scorecard")
 st.caption("Score any Toronto address on the 15-minute city standard.")
 
