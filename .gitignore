@@ -1,7 +1,7 @@
 claude-plans
 .claude-plans/
 .venv/
-city-scorecard/.cache/
-city-scorecard/cache/
 .claude
 city-scorecard/__pycache__
+city-scorecard/.citydata_cache/
+city-scorecard/build*/

@@ -1,0 +1,56 @@
+name: Rebuild city data
+
+# Periodically rebuilds the citywide walk/bike network graphs and amenities
+# dataset (scripts/build_city_data.py) from a local OSM extract, and
+# publishes them as GitHub Release assets under the fixed "city-data" tag.
+# citydata.py downloads from that fixed URL at app startup.
+
+on:
+  schedule:
+    - cron: "0 6 1 * *" # monthly, 06:00 UTC on the 1st
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: city-scorecard
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install osmium-tool
+        run: sudo apt-get update && sudo apt-get install -y osmium-tool
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build city data
+        run: python scripts/build_city_data.py --out build
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view city-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload city-data \
+              build/toronto_walk.graph.pkl \
+              build/toronto_bike.graph.pkl \
+              build/toronto_amenities.geoparquet \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create city-data \
+              build/toronto_walk.graph.pkl \
+              build/toronto_bike.graph.pkl \
+              build/toronto_amenities.geoparquet \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "City data" \
+              --notes "Automated rebuild of citywide walk/bike networks and amenities. Run: ${{ github.run_id }}"
+          fi
