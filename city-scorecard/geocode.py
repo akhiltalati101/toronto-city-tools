@@ -1,4 +1,4 @@
-from geopy.geocoders import Nominatim
+from geopy.geocoders import Photon
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 
@@ -10,7 +10,7 @@ def geocode_address(address: str, city_bias: str = "Toronto, Ontario") -> tuple[
 
     Raises ValueError if the address cannot be found.
     """
-    geolocator = Nominatim(user_agent="toronto-city-scorecard")
+    geolocator = Photon(user_agent="toronto-city-scorecard")
 
     query = address if city_bias.lower() in address.lower() else f"{address}, {city_bias}"
 
