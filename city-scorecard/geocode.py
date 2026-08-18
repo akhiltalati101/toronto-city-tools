@@ -1,6 +1,11 @@
 from geopy.geocoders import Photon
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
+# Mirrors scripts/build_city_data.py's TORONTO_BBOX — the prebuilt network/
+# amenities data only covers this area, so addresses outside it would
+# silently snap to the nearest in-bounds graph node instead of erroring.
+TORONTO_BBOX = (-79.64, 43.58, -79.11, 43.86)  # (minx, miny, maxx, maxy)
+
 
 def geocode_address(address: str, city_bias: str = "Toronto, Ontario") -> tuple[float, float]:
     """Return (lat, lon) for the given address string.
@@ -8,7 +13,8 @@ def geocode_address(address: str, city_bias: str = "Toronto, Ontario") -> tuple[
     Appends city_bias to the query if the address doesn't already contain it,
     so bare street addresses resolve within Toronto by default.
 
-    Raises ValueError if the address cannot be found.
+    Raises ValueError if the address cannot be found or falls outside the
+    supported Toronto area.
     """
     geolocator = Photon(user_agent="toronto-city-scorecard")
 
@@ -24,7 +30,12 @@ def geocode_address(address: str, city_bias: str = "Toronto, Ontario") -> tuple[
     if location is None:
         raise ValueError(f"Address not found: {address!r}")
 
-    return (location.latitude, location.longitude)
+    lat, lon = location.latitude, location.longitude
+    minx, miny, maxx, maxy = TORONTO_BBOX
+    if not (minx <= lon <= maxx and miny <= lat <= maxy):
+        raise ValueError("Address is outside supported Toronto area")
+
+    return (lat, lon)
 
 
 if __name__ == "__main__":
