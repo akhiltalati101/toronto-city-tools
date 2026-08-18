@@ -27,7 +27,8 @@ def _amenity_name(row, fallback: str) -> str:
 
 def render_map(lat, lon, address, walk_polygon, bike_polygon, amenities, score_result) -> folium.Map:
     """Build a Folium map: isochrones, amenity markers, score badge, legend."""
-    m = folium.Map(location=(lat, lon), zoom_start=15, tiles="OpenStreetMap")
+    m = folium.Map(location=(lat, lon), zoom_start=15, tiles=None)
+    folium.TileLayer("OpenStreetMap", control=False).add_to(m)
 
     folium.Polygon(
         locations=_polygon_to_latlon(bike_polygon),
@@ -61,7 +62,7 @@ def render_map(lat, lon, address, walk_polygon, bike_polygon, amenities, score_r
             ).add_to(group)
         group.add_to(m)
 
-    LayerControl(collapsed=False).add_to(m)
+    LayerControl(collapsed=False, position="topleft").add_to(m)
 
     _add_score_badge(m, score_result)
     _add_legend(m)
@@ -99,7 +100,7 @@ def _add_legend(m: folium.Map) -> None:
     <div style="
         position: fixed; bottom: 24px; left: 12px; z-index: 9999;
         background: white; border-radius: 8px; padding: 10px 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-family: sans-serif; font-size: 13px;">
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-family: sans-serif; font-size: 13px; color: #212121;">
       <div style="font-weight:700; margin-bottom:4px;">Legend</div>
       {rows}
       <hr style="margin:6px 0;">
