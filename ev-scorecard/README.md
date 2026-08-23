@@ -1,31 +1,27 @@
-# EV Charging Scorecard
+# Should I Own an EV?
 
-Check any address in Toronto for whether it's **underserved or overserved** by public EV charging — not just "how close is the nearest charger," but how the local supply compares to what the neighbourhood actually needs, adjusted for income.
+Check any Toronto address for whether it's realistic to own an EV there. First: **can you charge at home?** If the address looks like a detached or semi-detached house, home charging is almost always the answer — cheap, convenient, available most nights. If not (apartments, condos, anything without a private driveway or garage), the app instead scores **public charging access**: how many charging stations are reachable within a 15-minute walk, and how close the nearest one is.
 
 ## How it works
 
-Enter an address → the app locates its Statistics Canada **census tract** and compares:
+1. **Home charging check** — looks up the OpenStreetMap building at the address and classifies it by type. Detached/semi-detached houses → home charging is likely feasible. Apartments, condos, and other multi-unit buildings → not feasible, so the app checks public charging instead. This is a heuristic based on building *form*, not a direct check for a driveway or garage — see Limitations below.
+2. **Public charging access** (fallback only) — uses the same proximity (60%) / variety (40%) scoring formula as [City Scorecard](../city-scorecard)'s walkability score, applied to public EV chargers instead of amenities: how far to the nearest charger, and how many are reachable within a 15-minute walk.
 
-- **Local supply** — public charging ports in that tract, per 1,000 residents
-- **Citywide benchmark** — the citywide average ports-per-1,000-residents, adjusted by the tract's **median household income percentile**
-
-Lower-income tracts are held to a *higher* expected supply bar, not a lower one — the working assumption is that scarce public charging is itself a barrier to EV adoption in those areas, rather than a sign of lower need. This is a modeling choice, not a neutral fact; it's exposed in the app as an "equity weighting" slider (0 = income-blind ratio) so it can be tuned or turned off.
-
-**Supply index** = local ratio ÷ income-adjusted benchmark. Below 1.0 means underserved relative to the benchmark; above 1.0 means overserved. Results bucket into five labels: Strongly Underserved, Underserved, Balanced, Overserved, Strongly Overserved.
+**v1 scope note:** this only checks whether charging is *nearby*. It doesn't check whether that public charging is already saturated by other EV owners in the area (demand), and it doesn't factor in income or neighbourhood equity. Those are planned for a future policy-focused view (see Roadmap).
 
 ## Data sources
 
 | Data | Source |
 |---|---|
-| Charging stations | [City of Toronto Open Data](https://open.toronto.ca/dataset/city-operated-electric-vehicle-charging-station-map/) — city-operated public EV charging stations, refreshed quarterly. Covers city-operated (Green P) stations only, not private-network chargers (e.g. mall/condo/workplace chargers), so it undercounts total real-world access. |
-| Census tract boundaries | Statistics Canada 2021 [Cartographic Boundary Files](https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index2021-eng.cfm) |
-| Population + median household income | Statistics Canada 2021 [Census Profile](https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/index.cfm) |
+| Charging stations | [City of Toronto Open Data](https://open.toronto.ca/dataset/city-operated-electric-vehicle-charging-station-map/) — city-operated public EV charging stations, refreshed quarterly. Covers city-operated (Green P) stations only, not private-network chargers, so it undercounts total real-world public charging access. |
+| Building type (home charging check) | [OpenStreetMap](https://www.openstreetmap.org/), queried live per address via [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) |
+| Walk network (15-min isochrone) | Reuses [City Scorecard](../city-scorecard)'s prebuilt citywide walk graph — same street network, no separate build needed here |
 
 ## Stack
 
 | Layer | Choice |
 |---|---|
-| **Core** | Python + [GeoPandas](https://geopandas.org/) |
+| **Core** | Python + [OSMnx](https://osmnx.readthedocs.io/) |
 | **Maps** | [Folium](https://python-visualization.github.io/folium/) |
 | **UI** | [Streamlit](https://streamlit.io/) |
 
@@ -34,13 +30,16 @@ Lower-income tracts are held to a *higher* expected supply bar, not a lower one 
 ```
 ev-scorecard/
 ├── geocode.py          # Address → (lat, lon) via Photon
-├── data.py             # Downloads/caches prebuilt charger + census tract data
-├── supply_demand.py    # Locates a tract, computes the income-adjusted supply index
-├── pipeline.py         # geocode -> locate tract -> score, bundled for reuse
-├── mapview.py          # Folium map: tract boundary, chargers, supply-index badge
-├── app.py              # Streamlit UI — the app entry point
+├── home_charging.py    # Home-charging feasibility via OSM building type
+├── network.py          # Walk network graph (reuses city-scorecard's release)
+├── isochrone.py         # 15-min walk reachability polygon
+├── charger_access.py   # Public charging proximity + variety score (fallback only)
+├── data.py             # Downloads/caches charger data + the shared walk graph
+├── pipeline.py          # geocode -> home-charging-check -> (public fallback), bundled for reuse
+├── mapview.py            # Folium map: either a simple marker, or isochrone + chargers + grade badge
+├── app.py               # Streamlit UI — the app entry point
 ├── scripts/
-│   └── build_ev_data.py  # Offline build: fetches + joins all three data sources
+│   └── build_ev_data.py  # Offline build: charging stations + (dormant, for v2) census tract/income data
 └── requirements.txt
 ```
 
@@ -75,11 +74,11 @@ cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 streamlit run app.py
 ```
 
-The first request downloads the prebuilt charger + census tract data from GitHub Releases (published by `scripts/build_ev_data.py`, see below) and caches it for the life of the process.
+The first request downloads the prebuilt charging station data (published by `scripts/build_ev_data.py`, see below) and city-scorecard's walk network graph from GitHub Releases, caching both for the life of the process.
 
 ## Rebuilding the data
 
-`scripts/build_ev_data.py` fetches and joins all three data sources into two GeoParquet files. It's run periodically by `.github/workflows/rebuild-ev-data.yml` (quarterly — charging stations and census data both change slowly), which publishes the output as GitHub Release assets under the `ev-data` tag:
+`scripts/build_ev_data.py` fetches charging stations from Toronto Open Data (used by v1), and also fetches + joins Statistics Canada census tract boundaries, population, and income data (built and tested, but **not currently used by the app** — kept dormant for the v2 gap map described below). It's run periodically by `.github/workflows/rebuild-ev-data.yml` (quarterly), which publishes the output as GitHub Release assets under the `ev-data` tag:
 
 ```bash
 python scripts/build_ev_data.py --out build
@@ -87,11 +86,12 @@ python scripts/build_ev_data.py --out build
 
 ## Limitations & things to sanity-check
 
-- The city-operated charging station dataset doesn't include private-network chargers, so raw port counts understate real-world charging access everywhere — the supply index should be read as relative (which tracts have more/less city-provided supply than others), not absolute.
-- The income-adjustment formula is a modeling choice: it treats low income as *increasing* expected need for public charging, on the theory that scarce charging suppresses EV adoption in those areas rather than reflecting lower demand. Worth validating against known neighbourhoods before trusting results, and worth discussing whether this framing matches the intended use of the tool.
-- Census tracts near Toronto's edge may have chargers or population that fall just outside this app's coverage; addresses far from downtown are more likely to hit tract-boundary edge effects.
+- Home-charging feasibility is a heuristic based on OpenStreetMap's `building` tag — it reflects building *form*, not an actual check for a driveway or garage. Many Toronto buildings are only generically tagged (`building=yes`), which falls back to the public-charging path even for some houses. Townhouses/row houses are treated as feasible but flagged with a caveat, since driveway presence varies by unit.
+- The city-operated charging station dataset doesn't include private-network chargers (mall/condo/workplace chargers), so the public charging access score understates real-world options everywhere, not just in specific areas.
+- v1 doesn't account for how many other EV owners might already be relying on the same public chargers — a high access grade means chargers are *nearby*, not necessarily that they'll be *available*.
 
 ## Roadmap
 
-1. **EV Charging Scorecard** *(this app)* — supply/demand/income-based under/overserved score per address
-2. **Solar panel feasibility** — given an address, rooftop availability, and local weather data, estimate feasible solar capacity and expected yearly output. Not yet scoped: data sources for rooftop geometry/orientation and solar irradiance are still open questions.
+1. **Should I Own an EV?** *(this app, v1)* — per-address home-charging check, with a public-charging-access score as fallback
+2. **Policy gap map (v2)** — a citywide view of areas underserved by public charging, weighted by dwelling density (apartments/places where home charging isn't possible) vs. charger density, from a policy perspective: where does it make sense to add more chargers? Two distinct gap types planned: low-income areas with poor access (equity gap, likely needs government intervention) vs. higher-income areas with poor access (market gap, an opportunity for private charging operators). The census tract/income data pipeline for this already exists in `scripts/build_ev_data.py`, just not wired into the app yet.
+3. **Solar panel feasibility** — given an address, rooftop availability, and local weather data, estimate feasible solar capacity and expected yearly output. Not yet scoped.
