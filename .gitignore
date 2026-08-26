@@ -1,8 +1,13 @@
 claude-plans
 .claude-plans/
+.scratchpad/
 .venv/
 .claude
 city-scorecard/__pycache__
 city-scorecard/.citydata_cache/
 city-scorecard/build*/
 city-scorecard/.streamlit/secrets.toml
+ev-scorecard/__pycache__
+ev-scorecard/.evdata_cache/
+ev-scorecard/build*/
+ev-scorecard/.streamlit/secrets.toml
