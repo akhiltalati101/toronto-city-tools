@@ -42,10 +42,14 @@ def render_charger_access_map(lat, lon, address, isochrone_polygon, chargers_gdf
     for _, row in chargers_gdf.iterrows():
         ports = int(row.get("total_ports", 0))
         label = row.get("address") or "Charging station"
+        is_public = row.get("access_code", "public") == "public"
+        tooltip = f"{label} — {ports} port{'s' if ports != 1 else ''}"
+        if not is_public:
+            tooltip += f" (access: {row.get('access_code', 'unknown')})"
         folium.Marker(
             location=(row.geometry.y, row.geometry.x),
-            tooltip=f"{label} — {ports} port{'s' if ports != 1 else ''}",
-            icon=folium.Icon(color="green", icon="bolt", prefix="fa"),
+            tooltip=tooltip,
+            icon=folium.Icon(color="green" if is_public else "orange", icon="bolt", prefix="fa"),
         ).add_to(m)
 
     _add_grade_badge(m, access_result)
@@ -92,7 +96,8 @@ if __name__ == "__main__":
             G = load_network(lat, lon)
             iso = compute_isochrone(G, lat, lon)
             nearby = query_chargers_in_polygon(chargers_gdf, iso.polygon)
-            result = score_charger_access(nearby, G, iso.reachable)
+            public_nearby = nearby[nearby["access_code"] == "public"]
+            result = score_charger_access(public_nearby, G, iso.reachable)
             fmap = render_charger_access_map(lat, lon, address, iso.polygon, nearby, result)
             out_path = "map_preview_access.html"
 

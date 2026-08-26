@@ -1,10 +1,13 @@
 name: Rebuild EV data
 
 # Periodically rebuilds the census-tract-level EV charging supply/demand/
-# income dataset (scripts/build_ev_data.py) from the City of Toronto Open
-# Data charging station dataset and Statistics Canada's 2021 Census, and
-# publishes them as GitHub Release assets under the fixed "ev-data" tag.
-# data.py downloads from that fixed URL at app startup.
+# income dataset (scripts/build_ev_data.py) from NREL's Alternative Fuel
+# Stations API (GTA-wide, public + private access) and Statistics Canada's
+# 2021 Census, and publishes them as GitHub Release assets under the fixed
+# "ev-data" tag. data.py downloads from that fixed URL at app startup.
+#
+# Requires an NREL_API_KEY repository secret (free key from
+# https://developer.nlr.gov/signup/).
 #
 # Runs less often than city-scorecard's rebuild-city-data.yml — charging
 # station counts and census data both change slowly.
@@ -34,6 +37,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build EV data
+        env:
+          NREL_API_KEY: ${{ secrets.NREL_API_KEY }}
         run: python scripts/build_ev_data.py --out build
 
       - name: Publish release assets

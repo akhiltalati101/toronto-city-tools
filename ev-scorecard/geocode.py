@@ -1,9 +1,11 @@
 from geopy.geocoders import Photon
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
-# Mirrors scripts/build_ev_data.py's TORONTO_BBOX — the prebuilt charging
-# station / census tract data only covers this area, so addresses outside it
-# would silently fail to match a census tract instead of erroring.
+# Mirrors scripts/build_ev_data.py's TORONTO_BBOX — the walk network graph
+# and census tract data only cover this area, so addresses outside it would
+# silently fail to score instead of erroring. (The charging-station dataset
+# itself now covers the wider GTA — see build_ev_data.py's GTA_BBOX — but
+# that's just pre-positioned for when the walk network is extended too.)
 TORONTO_BBOX = (-79.64, 43.58, -79.11, 43.86)  # (minx, miny, maxx, maxy)
 
 

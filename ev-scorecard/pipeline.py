@@ -50,7 +50,11 @@ def run_scorecard(address: str) -> ScorecardResult:
     G = load_network(lat, lon)
     iso = compute_isochrone(G, lat, lon)
     nearby_chargers = query_chargers_in_polygon(chargers_gdf, iso.polygon)
-    access_result = score_charger_access(nearby_chargers, G, iso.reachable)
+
+    # Private/restricted-access stations are shown on the map (see mapview.py)
+    # but shouldn't count toward the walkability score.
+    public_chargers = nearby_chargers[nearby_chargers["access_code"] == "public"]
+    access_result = score_charger_access(public_chargers, G, iso.reachable)
 
     return ScorecardResult(
         address=address, lat=lat, lon=lon,

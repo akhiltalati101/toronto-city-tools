@@ -1,7 +1,11 @@
 """Downloads and holds prebuilt data used by the app:
 
-- Charging stations: published to GitHub Releases by scripts/build_ev_data.py
-  (rebuilt periodically by .github/workflows/rebuild-ev-data.yml).
+- Charging stations: NREL Alternative Fuel Stations API data (public and
+  private-access, GTA-wide), published to GitHub Releases by
+  scripts/build_ev_data.py (rebuilt periodically by
+  .github/workflows/rebuild-ev-data.yml). See access_code on each row —
+  scoring should filter to "public" (see charger_access.py); the app itself
+  still only accepts addresses within Toronto (see geocode.py).
 - Walk network graph: reuses city-scorecard's own release rather than
   rebuilding an identical citywide walk graph here — EV charging access only
   needs the same street network city-scorecard already builds and publishes
@@ -51,7 +55,7 @@ def get_charging_stations() -> gpd.GeoDataFrame:
     """Return the prebuilt charging stations GeoDataFrame.
 
     Columns: geometry (point), address, network, level2_ports, level3_ports,
-    total_ports.
+    total_ports, access_code ("public"/"private"/"unknown").
     """
     path = _download(EV_DATA_RELEASE_URL, CHARGERS_ASSET)
     return gpd.read_parquet(path)

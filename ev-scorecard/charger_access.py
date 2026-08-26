@@ -15,8 +15,11 @@ import osmnx as ox
 from shapely.geometry import Polygon
 
 # Chargers reachable within a 15-min walk needed for full "variety" marks.
-# Toronto's city-operated network is small (~80 stations citywide as of
-# 2026), so 3 reachable already represents strong walkable access.
+# TODO: was calibrated for ~80 city-operated stations citywide; the NREL
+# swap (all public networks — ChargePoint, FLO, etc.) puts ~1,070 public
+# stations in Toronto alone, so dense areas will now trivially max out
+# variety at 3. Revisit this threshold before relying on the variety score
+# to differentiate walkable access city-wide.
 TARGET_CHARGER_COUNT = 3
 
 PROXIMITY_WEIGHT = 0.6
@@ -100,5 +103,6 @@ if __name__ == "__main__":
         G = load_network(lat, lon)
         iso = compute_isochrone(G, lat, lon)
         nearby = query_chargers_in_polygon(chargers_gdf, iso.polygon)
-        result = score_charger_access(nearby, G, iso.reachable)
+        public_nearby = nearby[nearby["access_code"] == "public"]
+        result = score_charger_access(public_nearby, G, iso.reachable)
         print(f"Grade {result.grade} ({result.combined}/100) — {result.count} chargers, nearest {result.nearest_min} min")

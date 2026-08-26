@@ -8,9 +8,14 @@ GitHub Release assets for the app to download at startup (see data.py).
 
 Three data sources, all fetched live by this script (no manual downloads):
 
-1. Charging stations — City of Toronto Open Data, CKAN package
-   "city-operated-electric-vehicle-charging-station-map". Resolved via
-   package_show so we don't hardcode a resource ID that rotates on refresh.
+1. Charging stations — NREL's Alternative Fuel Stations API (the DOE/AFDC
+   database), covering all public *and* private-access EV charging in
+   Ontario, not just City of Toronto-operated ones. Requires an NREL_API_KEY
+   env var (free key from https://developer.nlr.gov/signup/). The API has no
+   bounding-box parameter, so we fetch all of Ontario and clip to GTA_BBOX
+   locally. Wider than TORONTO_BBOX below (used for census tracts) since this
+   part of the pipeline is cheap to run at GTA scope even though walkability
+   scoring in the app itself is still Toronto-only for now.
 
 2. Census tract boundaries — Statistics Canada's 2021 Cartographic Boundary
    Files, served live via an ArcGIS REST MapServer (no shapefile download
@@ -36,6 +41,7 @@ Usage:
 import argparse
 import io
 import json
+import os
 import sys
 import zipfile
 from pathlib import Path
@@ -43,16 +49,24 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 import requests
-from shapely.geometry import Point, shape
+from shapely.geometry import shape
 
 # Generous City of Toronto bounding box: (minx, miny, maxx, maxy) — mirrors
-# geocode.py's TORONTO_BBOX.
+# geocode.py's TORONTO_BBOX. Used for census tracts (and, historically, the
+# charging-station fetch) — everything downstream of this bbox is what the
+# app can actually score today.
 TORONTO_BBOX = (-79.64, 43.58, -79.11, 43.86)
+
+# Generous Greater Toronto Area bounding box: (minx, miny, maxx, maxy) —
+# covers Halton, Peel, City of Toronto, York, and Durham regions. Used only
+# for the charging-station fetch (see fetch_charging_stations) since that
+# data is free to pull at GTA scope; walkability scoring elsewhere in the
+# pipeline is still clipped to TORONTO_BBOX.
+GTA_BBOX = (-80.00, 43.15, -78.55, 44.35)
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent.parent / "build"
 
-CKAN_BASE = "https://ckan0.cf.opendata.inter.prod-toronto.ca"
-CKAN_PACKAGE = "city-operated-electric-vehicle-charging-station-map"
+NREL_API_URL = "https://developer.nlr.gov/api/alt-fuel-stations/v1.json"
 
 CT_BOUNDARY_SERVICE = (
     "https://geo.statcan.gc.ca/geo_wa/rest/services/2021/"
@@ -71,42 +85,55 @@ EXPECTED_NAME_INCOME = "median total income of household in 2020"
 
 
 # ---------------------------------------------------------------------------
-# 1. Charging stations (City of Toronto Open Data)
+# 1. Charging stations (NREL Alternative Fuel Stations API)
 # ---------------------------------------------------------------------------
 
-def fetch_charging_stations() -> gpd.GeoDataFrame:
-    print(f"[chargers] resolving CKAN package '{CKAN_PACKAGE}'")
-    resp = requests.get(f"{CKAN_BASE}/api/3/action/package_show", params={"id": CKAN_PACKAGE}, timeout=60)
+def fetch_charging_stations(bbox: tuple = GTA_BBOX) -> gpd.GeoDataFrame:
+    """Fetch public and private-access EV charging stations in Ontario from
+    NREL's Alternative Fuel Stations API, then clip to bbox locally (the API
+    has no bounding-box parameter).
+
+    access_code ("public"/"private"/"unknown") is kept as a column so
+    downstream scoring can count public stations only while still surfacing
+    private/restricted ones with a note.
+    """
+    api_key = os.environ.get("NREL_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "NREL_API_KEY environment variable is required (free key from "
+            "https://developer.nlr.gov/signup/)."
+        )
+
+    print("[chargers] querying NREL Alternative Fuel Stations API (country=CA, state=ON, fuel_type=ELEC)")
+    params = {
+        "api_key": api_key,
+        "fuel_type": "ELEC",
+        "country": "CA",
+        "state": "ON",
+        "status": "E",  # available only — drop planned/temporarily-unavailable stations
+        "access": "all",  # keep public and private; access_code lets downstream code filter
+        "limit": "all",
+    }
+    resp = requests.get(NREL_API_URL, params=params, timeout=120)
     resp.raise_for_status()
-    package = resp.json()["result"]
+    stations = resp.json().get("fuel_stations", [])
+    print(f"[chargers] {len(stations):,} available ELEC stations in Ontario")
 
-    csv_resource = next(
-        r for r in package["resources"]
-        if r["format"].upper() == "CSV" and "4326" in r["name"]
-    )
-    print(f"[chargers] downloading {csv_resource['url']}")
-    csv_text = requests.get(csv_resource["url"], timeout=120).content.decode("utf-8-sig")
+    df = pd.DataFrame(stations)
+    minx, miny, maxx, maxy = bbox
+    df = df[df["longitude"].between(minx, maxx) & df["latitude"].between(miny, maxy)]
+    print(f"[chargers] {len(df):,} within GTA bounding box")
 
-    df = pd.read_csv(io.StringIO(csv_text))
-    print(f"[chargers] {len(df):,} rows")
-
-    def _lonlat(geom_json: str) -> tuple[float, float]:
-        coords = json.loads(geom_json)["coordinates"]
-        lon, lat = coords[0] if isinstance(coords[0], list) else coords
-        return lon, lat
-
-    lonlat = df["geometry"].apply(_lonlat)
-    df["lon"] = lonlat.apply(lambda t: t[0])
-    df["lat"] = lonlat.apply(lambda t: t[1])
-    df["level2_ports"] = pd.to_numeric(df["Level2_Charging_Ports"], errors="coerce").fillna(0).astype(int)
-    df["level3_ports"] = pd.to_numeric(df["Level3_Charging_Ports"], errors="coerce").fillna(0).astype(int)
+    df["level2_ports"] = pd.to_numeric(df["ev_level2_evse_num"], errors="coerce").fillna(0).astype(int)
+    df["level3_ports"] = pd.to_numeric(df["ev_dc_fast_num"], errors="coerce").fillna(0).astype(int)
     df["total_ports"] = df["level2_ports"] + df["level3_ports"]
-    df["address"] = df["Address"]
-    df["network"] = df["Type"]
+    df["address"] = df["street_address"]
+    df["network"] = df["ev_network"]
+    df["access_code"] = df["access_code"].fillna("unknown")
 
     gdf = gpd.GeoDataFrame(
-        df[["address", "network", "level2_ports", "level3_ports", "total_ports"]],
-        geometry=gpd.points_from_xy(df["lon"], df["lat"]),
+        df[["address", "network", "level2_ports", "level3_ports", "total_ports", "access_code"]],
+        geometry=gpd.points_from_xy(df["longitude"], df["latitude"]),
         crs="EPSG:4326",
     )
     return gdf
@@ -266,7 +293,12 @@ def assemble_census_tracts(boundaries: gpd.GeoDataFrame, profile: pd.DataFrame, 
     # Assign each charger to its containing tract, then aggregate ports per tract.
     joined = gpd.sjoin(chargers, ct[["ct_uid", "geometry"]], how="left", predicate="within")
     chargers["ct_uid"] = joined["ct_uid"]
-    port_totals = chargers.dropna(subset=["ct_uid"]).groupby("ct_uid")["total_ports"].sum()
+
+    # Only public stations count toward accessible supply — private/restricted
+    # ones stay in the dataset (for the map) but shouldn't inflate the
+    # per-tract supply ratio.
+    public_chargers = chargers[chargers["access_code"] == "public"]
+    port_totals = public_chargers.dropna(subset=["ct_uid"]).groupby("ct_uid")["total_ports"].sum()
     ct["port_count"] = ct["ct_uid"].map(port_totals).fillna(0).astype(int)
 
     ct["local_ratio"] = ct["port_count"] / ct["population"] * 1000
@@ -303,7 +335,7 @@ def main() -> None:
     census_tracts, chargers = assemble_census_tracts(boundaries, profile, chargers)
 
     save_geoparquet(
-        chargers[["address", "network", "level2_ports", "level3_ports", "total_ports", "ct_uid", "geometry"]],
+        chargers[["address", "network", "level2_ports", "level3_ports", "total_ports", "access_code", "ct_uid", "geometry"]],
         args.out / "toronto_chargers.geoparquet",
     )
     save_geoparquet(

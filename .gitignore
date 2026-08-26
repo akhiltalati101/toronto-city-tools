@@ -1,5 +1,6 @@
 claude-plans
 .claude-plans/
+.scratchpad/
 .venv/
 .claude
 city-scorecard/__pycache__

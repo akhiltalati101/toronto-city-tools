@@ -33,17 +33,15 @@ def _render_home_charging_card(result) -> None:
         """,
         unsafe_allow_html=True,
     )
-    st.caption(f"Building type: {result.dwelling_type} · confidence: {result.confidence}")
-    st.info(result.note)
-    st.subheader("What this means")
-    st.markdown(
-        """
-        - **Level 2 (240V) home charging** is typically installable in a private driveway or garage —
-          adds roughly 30–40 km of range per hour, enough for a full overnight charge.
-        - You may need an electrical panel assessment; a licensed electrician can confirm your home's
-          capacity and provide an installation quote.
-        - Home charging is generally the cheapest and most convenient way to charge an EV day-to-day.
-        """
+    st.metric(
+        "Residence Type",
+        result.dwelling_type,
+        help=(
+            f"Confidence: {result.confidence}. {result.note} Level 2 (240V) home charging is "
+            "typically installable in a private driveway or garage — adds roughly 30–40 km of "
+            "range per hour, enough for a full overnight charge. A licensed electrician can "
+            "confirm your panel capacity and provide an installation quote."
+        ),
     )
 
 
@@ -62,15 +60,15 @@ def _render_charger_access_card(home_result, access_result) -> None:
         """,
         unsafe_allow_html=True,
     )
-    st.caption(f"Home charging not assumed here — {home_result.note}")
     nearest = f"{access_result.nearest_min} min" if access_result.nearest_min is not None else "—"
-    st.write(
-        f"**{access_result.count}** charging station{'s' if access_result.count != 1 else ''} within a 15-minute walk "
-        f"· nearest is **{nearest}** away"
-    )
-    st.caption(
-        "This score reflects nearby public charging supply only — it doesn't yet account for how many "
-        "other EV owners nearby might already be using those chargers."
+    count = access_result.count
+    st.metric(
+        "Public Charging Availability",
+        f"{count} station{'s' if count != 1 else ''} available",
+        help=(
+            f"{home_result.note} Within a 15-minute walk of this address, with the nearest "
+            f"station {nearest} away."
+        ),
     )
 
 
@@ -83,18 +81,11 @@ st.caption("Check whether a Toronto address can support home charging — or how
 with st.expander("How this is calculated"):
     st.markdown(
         """
-        First, the app checks whether the address's building (via OpenStreetMap) is a type that
-        typically has a private driveway or garage — detached and semi-detached houses, mostly.
-        If so, home charging is the answer: cheap, convenient, and available most nights.
-
-        If the building looks like it's multi-unit (apartments, condos, etc.) or its type can't be
-        determined, the app instead scores **public charging access**: how many City of Toronto
-        charging stations are reachable within a 15-minute walk, and how close the nearest one is —
-        using the same proximity/variety formula as [City Scorecard](../city-scorecard)'s walkability score.
-
-        **v1 scope note:** this only checks whether charging is *nearby*, not whether it's already
-        saturated by other EV owners in the area, and it doesn't yet factor in income or neighbourhood
-        equity. Those are planned for a future policy-focused "gap map" view.
+        If the address's building is detected to be a detached or semi-detached house, the
+        types that usually have a driveway or garage, home charging is the answer. 
+        
+        Otherwise (multi-unit or unknown building type), the app scores based on **public charging access**: 
+        how many publicly available electric charging stations are within a 15-minute walk and how close the nearest one is.
         """
     )
 
