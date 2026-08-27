@@ -291,7 +291,11 @@ def assemble_census_tracts(boundaries: gpd.GeoDataFrame, profile: pd.DataFrame, 
     ct["income_percentile"] = ct["median_household_income"].rank(pct=True)
 
     # Assign each charger to its containing tract, then aggregate ports per tract.
+    # Generalized StatCan tract boundaries can have microscopic overlaps at
+    # shared edges, so a charger can match more than one tract here; keep
+    # only the first match so the join stays 1:1 (chargers.index is unique).
     joined = gpd.sjoin(chargers, ct[["ct_uid", "geometry"]], how="left", predicate="within")
+    joined = joined[~joined.index.duplicated(keep="first")]
     chargers["ct_uid"] = joined["ct_uid"]
 
     # Only public stations count toward accessible supply — private/restricted
