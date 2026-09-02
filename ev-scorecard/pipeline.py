@@ -1,12 +1,14 @@
-"""Bundles the geocode -> home-charging-check -> (public charging fallback)
+"""Bundles the geocode -> home-charging-check -> public-charging-score
 pipeline into a single call, shared by app.py.
 
-v1's question is "should I own an EV at this address": check home charging
-first; only fall back to scoring public charging access if home charging
-isn't feasible. See home_charging.py and charger_access.py for each step.
+v2: the public charging access score is always computed and shown — it
+answers "how well is this location served by public charging," independent
+of whether the resident personally has a driveway. Home charging feasibility
+is checked in parallel and surfaced as supplementary "you may not need this"
+info alongside install guidance, not as a gate that skips scoring. See
+home_charging.py and charger_access.py for each step.
 """
 from dataclasses import dataclass
-from typing import Optional
 
 import geopandas as gpd
 from shapely.geometry import Polygon
@@ -25,26 +27,22 @@ class ScorecardResult:
     lat: float
     lon: float
     home_charging: HomeChargingResult
-    charger_access: Optional[ChargerAccessResult]      # None when home charging is feasible
-    isochrone_polygon: Optional[Polygon]                # None when home charging is feasible
-    nearby_chargers: Optional[gpd.GeoDataFrame]         # None when home charging is feasible
+    charger_access: ChargerAccessResult
+    isochrone_polygon: Polygon
+    nearby_chargers: gpd.GeoDataFrame
+    walk_graph: object   # networkx graph, kept so app.py can re-score by
+                          # connector selection without recomputing the isochrone
+    reachable: dict       # node_id -> travel time in seconds, from the isochrone
 
 
 def run_scorecard(address: str) -> ScorecardResult:
-    """Run the full v1 pipeline for a single address.
+    """Run the full v2 pipeline for a single address.
 
     Raises ValueError if the address can't be geocoded or falls outside the
     supported Toronto area (propagated from geocode_address).
     """
     lat, lon = geocode_address(address)
     home_result = check_home_charging(lat, lon)
-
-    if home_result.feasible:
-        return ScorecardResult(
-            address=address, lat=lat, lon=lon,
-            home_charging=home_result,
-            charger_access=None, isochrone_polygon=None, nearby_chargers=None,
-        )
 
     chargers_gdf = get_charging_stations()
     G = load_network(lat, lon)
@@ -60,4 +58,5 @@ def run_scorecard(address: str) -> ScorecardResult:
         address=address, lat=lat, lon=lon,
         home_charging=home_result,
         charger_access=access_result, isochrone_polygon=iso.polygon, nearby_chargers=nearby_chargers,
+        walk_graph=G, reachable=iso.reachable,
     )

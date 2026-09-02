@@ -55,7 +55,10 @@ def get_charging_stations() -> gpd.GeoDataFrame:
     """Return the prebuilt charging stations GeoDataFrame.
 
     Columns: geometry (point), address, network, level2_ports, level3_ports,
-    total_ports, access_code ("public"/"private"/"unknown").
+    total_ports, access_code ("public"/"private"/"unknown"), connector_types
+    (comma-joined, e.g. "J1772, CHADEMO"), pricing, access_hours (the latter
+    two are free text from NREL, "Not listed" when the network doesn't
+    report them).
     """
     path = _download(EV_DATA_RELEASE_URL, CHARGERS_ASSET)
     return gpd.read_parquet(path)

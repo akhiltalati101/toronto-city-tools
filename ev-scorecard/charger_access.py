@@ -1,9 +1,10 @@
 """Scores public EV charging access within a 15-minute walk of an address —
-the fallback shown when home charging isn't available (see home_charging.py).
+always computed and shown, independent of home-charging feasibility (see
+home_charging.py, which is now a separate supplementary check).
 
 Mirrors city-scorecard's proximity(60%)/variety(40%) scoring formula
 (scoring.py), applied to a single category — public EV chargers — instead of
-its six amenity categories. v1 deliberately doesn't weigh this against local
+its six amenity categories. Deliberately doesn't weigh this against local
 EV-ownership demand; it only answers "is there charging nearby," not "is that
 charging already saturated."
 """
@@ -14,13 +15,38 @@ import geopandas as gpd
 import osmnx as ox
 from shapely.geometry import Polygon
 
+from isochrone import TRAVEL_TIME_MIN
+
 # Chargers reachable within a 15-min walk needed for full "variety" marks.
-# TODO: was calibrated for ~80 city-operated stations citywide; the NREL
-# swap (all public networks — ChargePoint, FLO, etc.) puts ~1,070 public
-# stations in Toronto alone, so dense areas will now trivially max out
-# variety at 3. Revisit this threshold before relying on the variety score
-# to differentiate walkable access city-wide.
-TARGET_CHARGER_COUNT = 3
+# Recalibrated 2026-08 against the NREL-scale dataset (~1,070 public
+# stations in Toronto): a spot-check of 8 addresses across downtown,
+# midtown, North York, Scarborough, Etobicoke, and the east/west ends found
+# counts of [1, 2, 2, 13, 15, 23, 51, 107] (median 14) — the old value of 3
+# saturated variety almost everywhere except the most charger-poor suburbs
+# (e.g. Scarborough Town Centre and North Toronto both had just 1-2). 10
+# sits below the median so genuinely well-served areas still cap at 100,
+# while charger-poor suburbs (1-2 stations) stay clearly differentiated.
+# See docs/algorithm_audit.md for the full methodology and sample.
+#
+# Calibrated against *all* public chargers combined — once scoring is
+# filtered to a single connector type (see filter_by_connectors below), a
+# lower count is expected and correct, not a sign this needs re-tuning: a
+# CHAdeMO-only driver genuinely has fewer usable stations than "any public
+# charger" would suggest.
+TARGET_CHARGER_COUNT = 10
+
+# Connector codes worth surfacing as a compatibility filter, in display
+# order, mapped to a rider-friendly label. Codes match NREL's
+# ev_connector_types values (see connector_types column, build_ev_data.py).
+# NEMA515 (a standard household outlet) is deliberately excluded — it's on
+# only 2 stations in the current dataset and virtually every EV can already
+# use one via its included adapter, so it isn't a meaningful filter.
+CONNECTOR_LABELS = {
+    "J1772": "J1772 (standard Level 2)",
+    "J1772COMBO": "CCS / J1772 Combo (DC fast)",
+    "CHADEMO": "CHAdeMO (DC fast)",
+    "TESLA": "Tesla (NACS / J3400)",
+}
 
 PROXIMITY_WEIGHT = 0.6
 VARIETY_WEIGHT = 0.4
@@ -46,13 +72,17 @@ def _grade(score: float) -> str:
     return "F"
 
 
+_PROXIMITY_FULL_MARKS_MIN = 5  # walk time at/under which proximity maxes out
+
+
 def _proximity_score(nearest_sec: Optional[float]) -> float:
     if nearest_sec is None:
         return 0.0
     minutes = nearest_sec / 60
-    if minutes <= 5:
+    if minutes <= _PROXIMITY_FULL_MARKS_MIN:
         return 100.0
-    return max(0.0, (15 - minutes) / 10 * 100)
+    span = TRAVEL_TIME_MIN - _PROXIMITY_FULL_MARKS_MIN
+    return max(0.0, (TRAVEL_TIME_MIN - minutes) / span * 100)
 
 
 def _variety_score(count: int) -> float:
@@ -64,6 +94,27 @@ def query_chargers_in_polygon(chargers_gdf: gpd.GeoDataFrame, polygon: Polygon) 
         return chargers_gdf
     idx = chargers_gdf.sindex.query(polygon, predicate="contains")
     return chargers_gdf.iloc[idx]
+
+
+def parse_connector_types(value) -> set[str]:
+    """Split a charger's comma-joined connector_types value (e.g.
+    "CHADEMO, J1772COMBO") into a set of codes. Handles None/NaN/"Not
+    listed" by returning an empty set, so such a charger never matches any
+    selection."""
+    if not value or not isinstance(value, str) or value == "Not listed":
+        return set()
+    return {part.strip() for part in value.split(",") if part.strip()}
+
+
+def filter_by_connectors(chargers_gdf: gpd.GeoDataFrame, selected: set[str]) -> gpd.GeoDataFrame:
+    """Keep only chargers compatible with at least one connector in
+    `selected`. An empty `selected` (nothing chosen yet) returns an empty
+    frame — score_charger_access already scores that as 0/F, so "no
+    connector picked" and "no compatible charger nearby" share one path."""
+    if not selected or chargers_gdf.empty:
+        return chargers_gdf.iloc[0:0]
+    mask = chargers_gdf["connector_types"].apply(lambda v: bool(parse_connector_types(v) & selected))
+    return chargers_gdf[mask]
 
 
 def score_charger_access(chargers_gdf: gpd.GeoDataFrame, G, reachable: dict) -> ChargerAccessResult:
