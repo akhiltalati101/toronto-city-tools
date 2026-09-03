@@ -1,0 +1,63 @@
+name: Rebuild zoning summaries
+
+# OPTIONAL citywide pre-warm: the app itself now summarizes zoning
+# applications live, on first view, and caches the result for the life of
+# the running process (see pipeline.py). This workflow exists only so a
+# popular address's first-ever view doesn't wait on a handful of live LLM
+# calls — it regenerates plain-English summaries for all active
+# applications (scripts/build_zoning_summaries.py) and publishes them as a
+# GitHub Release asset under the fixed "zoning-data" tag, which the app
+# checks first before falling back to a live call.
+#
+# Manual trigger only (not scheduled) — run it from the Actions tab, or
+# `gh workflow run rebuild-zoning-summaries.yml`, whenever you want to
+# pre-warm the cache. Either path (this workflow or the live app) calls the
+# same OpenRouter key, which is where spend is actually capped — with a
+# credit limit set on the key itself in OpenRouter's dashboard, not by
+# anything in this workflow.
+#
+# Requires an OPENROUTER_API_KEY repository secret
+# (https://openrouter.ai/keys — set its credit limit in the dashboard).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: area-scorecard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build zoning summaries
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: python scripts/build_zoning_summaries.py --out build
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view zoning-data --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload zoning-data \
+              build/zoning_summaries.json \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create zoning-data \
+              build/zoning_summaries.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Zoning summaries" \
+              --notes "Automated rebuild of plain-English zoning application summaries. Run: ${{ github.run_id }}"
+          fi
