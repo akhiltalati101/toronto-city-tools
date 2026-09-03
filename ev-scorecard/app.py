@@ -28,13 +28,40 @@ def _check_password() -> bool:
     if st.session_state.get("authed"):
         return True
 
-    entered = st.text_input("Password", type="password")
-    if entered:
-        if entered == st.secrets.get("app_password"):
-            st.session_state.authed = True
-            st.rerun()
-        else:
-            st.error("Incorrect password.")
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stForm"] {
+            border: 1px solid rgba(49, 51, 63, 0.15);
+            border-radius: 16px;
+            padding: 32px 28px 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.write("")
+    st.write("")
+    _, mid, _ = st.columns([1, 1.1, 1])
+    with mid:
+        with st.form("login"):
+            st.markdown(
+                "<div style='text-align:center; font-size:20px; font-weight:800;'>Should I Own an EV?</div>"
+                "<div style='text-align:center; font-size:13px; color:#666; margin-bottom:18px;'>"
+                "Enter password to continue</div>",
+                unsafe_allow_html=True,
+            )
+            entered = st.text_input("Password", type="password", label_visibility="collapsed", placeholder="Password")
+            submitted = st.form_submit_button("Continue", type="primary", use_container_width=True)
+
+        if submitted:
+            if entered == st.secrets.get("app_password"):
+                st.session_state.authed = True
+                st.rerun()
+            else:
+                st.error("Incorrect password.")
     return False
 
 
@@ -116,7 +143,7 @@ def _render_home_charging_panel(result) -> None:
 if not _check_password():
     st.stop()
 
-st.title("🔌 Should I Own an EV?")
+st.title("Should I Own an EV?")
 st.caption("See how well a Toronto address is served by public EV charging you can actually plug into — plus whether it can likely support a home charger too.")
 
 with st.expander("How this is calculated"):
