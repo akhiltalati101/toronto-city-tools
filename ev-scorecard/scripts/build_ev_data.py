@@ -130,9 +130,19 @@ def fetch_charging_stations(bbox: tuple = GTA_BBOX) -> gpd.GeoDataFrame:
     df["address"] = df["street_address"]
     df["network"] = df["ev_network"]
     df["access_code"] = df["access_code"].fillna("unknown")
+    # Comma-joined string (not a list column) so it round-trips through
+    # geoparquet cleanly and can be dropped straight into popup HTML.
+    df["connector_types"] = df["ev_connector_types"].apply(
+        lambda types: ", ".join(types) if isinstance(types, list) and types else "Not listed"
+    )
+    df["pricing"] = df["ev_pricing"].fillna("Not listed")
+    df["access_hours"] = df["access_days_time"].fillna("Not listed")
 
     gdf = gpd.GeoDataFrame(
-        df[["address", "network", "level2_ports", "level3_ports", "total_ports", "access_code"]],
+        df[[
+            "address", "network", "level2_ports", "level3_ports", "total_ports", "access_code",
+            "connector_types", "pricing", "access_hours",
+        ]],
         geometry=gpd.points_from_xy(df["longitude"], df["latitude"]),
         crs="EPSG:4326",
     )
@@ -339,7 +349,10 @@ def main() -> None:
     census_tracts, chargers = assemble_census_tracts(boundaries, profile, chargers)
 
     save_geoparquet(
-        chargers[["address", "network", "level2_ports", "level3_ports", "total_ports", "access_code", "ct_uid", "geometry"]],
+        chargers[[
+            "address", "network", "level2_ports", "level3_ports", "total_ports", "access_code",
+            "connector_types", "pricing", "access_hours", "ct_uid", "geometry",
+        ]],
         args.out / "toronto_chargers.geoparquet",
     )
     save_geoparquet(
