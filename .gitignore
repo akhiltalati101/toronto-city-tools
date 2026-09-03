@@ -11,3 +11,7 @@ ev-scorecard/__pycache__
 ev-scorecard/.evdata_cache/
 ev-scorecard/build*/
 ev-scorecard/.streamlit/secrets.toml
+area-scorecard/__pycache__
+area-scorecard/.areadata_cache/
+area-scorecard/build*/
+area-scorecard/.streamlit/secrets.toml

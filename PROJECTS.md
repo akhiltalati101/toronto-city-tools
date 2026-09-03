@@ -33,3 +33,20 @@ Charging station data comes from the City of Toronto's Open Data portal (city-op
 Built with Python, OSMnx, Folium, and Streamlit.
 
 **GitHub:** https://github.com/akhiltalati101/toronto-city-tools/tree/main/ev-scorecard
+
+---
+
+## Should I Live Here? (Area Scorecard)
+
+Check any Toronto address for what's changing nearby, how it compares on safety, and — if it's a rental apartment — its official maintenance record.
+
+**How it works:**
+1. **Zoning & development** — active City of Toronto planning applications within 400m of the address, queried live against the city's Application Information Centre map layer. Each shows a plain-English summary — generated on first view via OpenRouter (Gemini Flash) and cached after that, so repeat lookups are instant — or the city's own description if summarization isn't configured, plus a link to the official application page.
+2. **Safety** — Toronto Police's Community Safety Indicators (crime) data for the last 6 months within 500m, weighted by severity and compared to the citywide rate for an area that size.
+3. **Rental building quality** — if the address looks like an apartment/condo building, its official RentSafeTO evaluation score (elevators, security, cleanliness, etc.) if it's a registered rental building; RentSafeTO doesn't cover owner-occupied condo corporations, so an unmatched building gets an honest note plus a Facebook group search link instead.
+
+LLM summarization cost is capped by a credit limit on the OpenRouter API key itself, not by any app code — the same key is used whether a summary is generated live by the app or pre-warmed citywide by an optional, manually-triggered background job.
+
+Built with Python, Folium, and Streamlit.
+
+**GitHub:** https://github.com/akhiltalati101/toronto-city-tools/tree/main/area-scorecard
