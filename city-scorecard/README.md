@@ -80,10 +80,21 @@ source .venv/bin/activate
 
 You'll see `(.venv)` in your prompt when it's active.
 
-### 5. Run the app
+### 5. Set a password
+
+The app is gated behind a shared password, read from the hub's secrets file (run these from the repo root):
 
 ```bash
-streamlit run app.py
+cp hub/.streamlit/secrets.toml.example hub/.streamlit/secrets.toml
+# edit hub/.streamlit/secrets.toml with your own password
+```
+
+### 6. Run the app
+
+This app is served through the hub. From the repo root:
+
+```bash
+streamlit run hub/hub_app.py
 ```
 
 ## Roadmap

@@ -65,8 +65,8 @@ pip install -r requirements.txt
 ### 3. Set a password, and (optionally) an OpenRouter key
 
 ```bash
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-# edit .streamlit/secrets.toml: set your own password, and OPENROUTER_API_KEY
+cp hub/.streamlit/secrets.toml.example hub/.streamlit/secrets.toml  # run from the repo root
+# edit hub/.streamlit/secrets.toml: set your own password, and OPENROUTER_API_KEY
 # (from https://openrouter.ai/keys — set a credit limit on it there) if you
 # want live zoning-application summaries. Without it, the app still works,
 # just shows the city's raw description text instead of a summary.

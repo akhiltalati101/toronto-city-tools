@@ -66,8 +66,8 @@ pip install -r requirements.txt
 ### 3. Set a password
 
 ```bash
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-# edit .streamlit/secrets.toml with your own password
+cp hub/.streamlit/secrets.toml.example hub/.streamlit/secrets.toml  # run from the repo root
+# edit hub/.streamlit/secrets.toml with your own password
 ```
 
 ### 4. Run the app
