@@ -20,51 +20,6 @@ NRCAN_COSTS_GUIDE_URL = (
     "zero-emission-vehicles/electric-vehicle-charging-costs-ev-charging"
 )
 
-st.set_page_config(page_title="Should I Own an EV?", page_icon="🔌", layout="wide")
-
-
-def _check_password() -> bool:
-    """Gate the app behind a shared password stored in st.secrets."""
-    if st.session_state.get("authed"):
-        return True
-
-    st.markdown(
-        """
-        <style>
-        div[data-testid="stForm"] {
-            border: 1px solid rgba(49, 51, 63, 0.15);
-            border-radius: 16px;
-            padding: 32px 28px 24px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    st.write("")
-    _, mid, _ = st.columns([1, 1.1, 1])
-    with mid:
-        with st.form("login"):
-            st.markdown(
-                "<div style='text-align:center; font-size:20px; font-weight:800;'>Should I Own an EV?</div>"
-                "<div style='text-align:center; font-size:13px; color:#666; margin-bottom:18px;'>"
-                "Enter password to continue</div>",
-                unsafe_allow_html=True,
-            )
-            entered = st.text_input("Password", type="password", label_visibility="collapsed", placeholder="Password")
-            submitted = st.form_submit_button("Continue", type="primary", use_container_width=True)
-
-        if submitted:
-            if entered == st.secrets.get("app_password"):
-                st.session_state.authed = True
-                st.rerun()
-            else:
-                st.error("Incorrect password.")
-    return False
-
-
 def _render_charger_access_card(access_result, connectors_selected: bool) -> None:
     if not connectors_selected:
         st.markdown(
@@ -140,102 +95,112 @@ def _render_home_charging_panel(result) -> None:
     )
 
 
-if not _check_password():
-    st.stop()
+def render() -> None:
+    st.title("Should I Own an EV?")
+    st.caption("See how well a Toronto address is served by public EV charging you can actually plug into — plus whether it can likely support a home charger too.")
 
-st.title("Should I Own an EV?")
-st.caption("See how well a Toronto address is served by public EV charging you can actually plug into — plus whether it can likely support a home charger too.")
+    with st.expander("How this is calculated"):
+        st.markdown(
+            """
+            The headline score reflects **compatible public charging access**: how many publicly
+            available charging stations *your car can actually plug into* are within a 15-minute
+            walk, and how close the nearest one is. Select your car's connector type(s) below,
+            then hit **Check It** — some networks (e.g. most Tesla Destination/Supercharger
+            stations) only work with one connector, so a score that counted every public charger
+            regardless of connector would overstate what you can actually use.
 
-with st.expander("How this is calculated"):
-    st.markdown(
-        """
-        The headline score reflects **compatible public charging access**: how many publicly
-        available charging stations *your car can actually plug into* are within a 15-minute
-        walk, and how close the nearest one is. Select your car's connector type(s) below,
-        then hit **Check It** — some networks (e.g. most Tesla Destination/Supercharger
-        stations) only work with one connector, so a score that counted every public charger
-        regardless of connector would overstate what you can actually use.
+            This doesn't change based on whether you personally have a driveway — it's a property
+            of the location, useful for road trips, top-ups, or visitors even if you can charge at
+            home.
 
-        This doesn't change based on whether you personally have a driveway — it's a property
-        of the location, useful for road trips, top-ups, or visitors even if you can charge at
-        home.
-
-        If the address's building is detected to be a detached, semi-detached, or townhouse
-        type that usually has a driveway or garage, a separate panel below the score notes
-        that home Level 2 charging may also be available, with installation guidance.
-        """
-    )
-
-address = st.text_input("Address", placeholder="e.g. 100 Queen St W")
-
-st.subheader("What does your car use?")
-st.caption(
-    "Select every connector your car supports. Chargers you can't use show up "
-    "greyed out on the map and don't count toward your score."
-)
-connector_cols = st.columns(len(CONNECTOR_LABELS))
-current_selection = {
-    code
-    for col, (code, label) in zip(connector_cols, CONNECTOR_LABELS.items())
-    if col.checkbox(label, key=f"connector_{code}")
-}
-
-check_clicked = st.button("Check It", type="primary")
-
-# Recalculation only happens on a "Check It" click, not on every checkbox
-# toggle — the score below is driven by session_state.selected_connectors,
-# a snapshot taken at click time, not by current_selection directly. The
-# full pipeline (geocode, Overpass, isochrone) only re-runs when the address
-# text actually changed; a connector-only re-check just re-scores the
-# already-fetched chargers using the cached walk_graph/reachable.
-if check_clicked:
-    if not address.strip():
-        st.warning("Enter an address first.")
-    else:
-        try:
-            with st.spinner("Checking address..."):
-                if st.session_state.get("scorecard_address") != address:
-                    st.session_state.scorecard = run_scorecard(address)
-                    st.session_state.scorecard_address = address
-            st.session_state.selected_connectors = current_selection
-        except ValueError as e:
-            st.error(str(e))
-            st.session_state.pop("scorecard", None)
-            st.session_state.pop("scorecard_address", None)
-
-if "scorecard" in st.session_state and "selected_connectors" in st.session_state:
-    card: ScorecardResult = st.session_state.scorecard
-    selected_connectors = st.session_state.selected_connectors
-
-    public_chargers = card.nearby_chargers[card.nearby_chargers["access_code"] == "public"]
-    compatible_chargers = filter_by_connectors(public_chargers, selected_connectors)
-    access_result = score_charger_access(compatible_chargers, card.walk_graph, card.reachable)
-
-    col_score, col_map = st.columns([1, 2])
-    with col_score:
-        _render_charger_access_card(access_result, connectors_selected=bool(selected_connectors))
-        if card.home_charging.feasible:
-            _render_home_charging_panel(card.home_charging)
-    with col_map:
-        st.subheader("Map")
-        fmap = render_charger_access_map(
-            card.lat, card.lon, card.address, card.isochrone_polygon, card.nearby_chargers,
-            access_result, selected_connectors,
+            If the address's building is detected to be a detached, semi-detached, or townhouse
+            type that usually has a driveway or garage, a separate panel below the score notes
+            that home Level 2 charging may also be available, with installation guidance.
+            """
         )
-        st_folium(fmap, width=None, height=450, returned_objects=[])
+
+    address = st.text_input("Address", placeholder="e.g. 100 Queen St W")
+
+    st.subheader("What does your car use?")
+    st.caption(
+        "Select every connector your car supports. Chargers you can't use show up "
+        "greyed out on the map and don't count toward your score."
+    )
+    connector_cols = st.columns(len(CONNECTOR_LABELS))
+    current_selection = {
+        code
+        for col, (code, label) in zip(connector_cols, CONNECTOR_LABELS.items())
+        if col.checkbox(label, key=f"connector_{code}")
+    }
+
+    check_clicked = st.button("Check It", type="primary")
+
+    # Recalculation only happens on a "Check It" click, not on every checkbox
+    # toggle — the score below is driven by session_state.selected_connectors,
+    # a snapshot taken at click time, not by current_selection directly. The
+    # full pipeline (geocode, Overpass, isochrone) only re-runs when the address
+    # text actually changed; a connector-only re-check just re-scores the
+    # already-fetched chargers using the cached walk_graph/reachable.
+    if check_clicked:
+        if not address.strip():
+            st.warning("Enter an address first.")
+        else:
+            try:
+                with st.spinner("Checking address..."):
+                    if st.session_state.get("scorecard_address") != address:
+                        st.session_state.ev_scorecard = run_scorecard(address)
+                        st.session_state.scorecard_address = address
+                st.session_state.selected_connectors = current_selection
+            except ValueError as e:
+                st.error(str(e))
+                st.session_state.pop("ev_scorecard", None)
+                st.session_state.pop("scorecard_address", None)
+
+    if "ev_scorecard" in st.session_state and "selected_connectors" in st.session_state:
+        card: ScorecardResult = st.session_state.ev_scorecard
+        selected_connectors = st.session_state.selected_connectors
+
+        public_chargers = card.nearby_chargers[card.nearby_chargers["access_code"] == "public"]
+        compatible_chargers = filter_by_connectors(public_chargers, selected_connectors)
+        access_result = score_charger_access(compatible_chargers, card.walk_graph, card.reachable)
+
+        col_score, col_map = st.columns([1, 2])
+        with col_score:
+            _render_charger_access_card(access_result, connectors_selected=bool(selected_connectors))
+            if card.home_charging.feasible:
+                _render_home_charging_panel(card.home_charging)
+        with col_map:
+            st.subheader("Map")
+            fmap = render_charger_access_map(
+                card.lat, card.lon, card.address, card.isochrone_polygon, card.nearby_chargers,
+                access_result, selected_connectors,
+            )
+            st_folium(fmap, width=None, height=450, returned_objects=[])
 
 
-# --- Compare Addresses -------------------------------------------------
-# Removed for v1's "should I own an EV" framing (a single-address yes/no
-# tool doesn't need side-by-side comparison the way city-scorecard's
-# walkability score does). Left here, commented out, in case a v2 use case
-# brings it back — see city-scorecard/app.py for the pattern to restore.
-#
-# tab_single, tab_compare = st.tabs(["Check an Address", "Compare Addresses"])
-# with tab_compare:
-#     col_a, col_b = st.columns(2)
-#     with col_a:
-#         address_a = st.text_input("Address A", key="address_a")
-#     with col_b:
-#         address_b = st.text_input("Address B", key="address_b")
-#     ...
+    # --- Compare Addresses -------------------------------------------------
+    # Removed for v1's "should I own an EV" framing (a single-address yes/no
+    # tool doesn't need side-by-side comparison the way city-scorecard's
+    # walkability score does). Left here, commented out, in case a v2 use case
+    # brings it back — see city-scorecard/app.py for the pattern to restore.
+    #
+    # tab_single, tab_compare = st.tabs(["Check an Address", "Compare Addresses"])
+    # with tab_compare:
+    #     col_a, col_b = st.columns(2)
+    #     with col_a:
+    #         address_a = st.text_input("Address A", key="address_a")
+    #     with col_b:
+    #         address_b = st.text_input("Address B", key="address_b")
+    #     ...
+
+
+if __name__ == "__main__":
+    st.set_page_config(page_title="Should I Own an EV?", page_icon="🔌", layout="wide")
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from common.auth import check_password
+    if check_password("Should I Own an EV?"):
+        render()
+    else:
+        st.stop()
