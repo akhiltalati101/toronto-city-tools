@@ -1,10 +1,17 @@
+import sys
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
 
-from mapview import GRADE_COLORS, render_map
-from pipeline import ScorecardResult, run_scorecard
-from scoring import PROFILES
+# Repo root, for `common` — the hub already adds it, but a standalone
+# `streamlit run city-scorecard/app.py` needs it before geocode.py imports.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from mapview import GRADE_COLORS, render_map  # noqa: E402
+from pipeline import ScorecardResult, run_scorecard  # noqa: E402
+from scoring import PROFILES, apply_weights  # noqa: E402
 
 CATEGORY_LABELS = {
     "grocery": "Grocery", "healthcare": "Healthcare", "parks": "Parks",
@@ -37,30 +44,45 @@ def _render_category_details(result) -> None:
         )
 
 
+def _weight_key(cat: str) -> str:
+    return f"weight_{cat}"
+
+
+def _apply_preset() -> None:
+    """Load the selected preset into the sliders. Runs as a widget callback,
+    i.e. before the sliders are drawn, which is the only point where their
+    session_state values can be set."""
+    for cat, weight in PROFILES[st.session_state.profile].items():
+        st.session_state[_weight_key(cat)] = weight
+
+
 def render() -> None:
     st.title("City Scorecard")
     st.caption("Score any Toronto address on the 15-minute city standard.")
 
-    if "profile" not in st.session_state:
-        st.session_state.profile = "General"
-    if "weights" not in st.session_state:
-        st.session_state.weights = dict(PROFILES["General"])
+    # The sliders are keyed so a preset change can move them: unkeyed, they
+    # kept their own values and the preset dropdown silently did nothing
+    # until "Reset" was clicked.
+    st.session_state.setdefault("profile", "General")
+    for cat, weight in PROFILES[st.session_state.profile].items():
+        st.session_state.setdefault(_weight_key(cat), weight)
 
     with st.sidebar:
         st.header("Profile")
-        profile = st.selectbox("Preset", list(PROFILES.keys()), key="profile")
-        if st.button("Reset weights to preset"):
-            st.session_state.weights = dict(PROFILES[profile])
-            st.rerun()
+        st.selectbox("Preset", list(PROFILES.keys()), key="profile", on_change=_apply_preset)
+        st.button("Reset weights to preset", on_click=_apply_preset)
 
         st.header("Fine-tune weights")
-        weights = {}
-        for cat in PROFILES["General"]:
-            default = st.session_state.weights.get(cat, PROFILES[profile][cat])
-            weights[cat] = st.slider(CATEGORY_LABELS[cat], 0.0, 1.0, float(default), 0.05)
+        weights = {
+            cat: st.slider(CATEGORY_LABELS[cat], 0.0, 1.0, step=0.05, key=_weight_key(cat))
+            for cat in PROFILES["General"]
+        }
         total = sum(weights.values())
         normalized_weights = {k: (v / total if total > 0 else 0) for k, v in weights.items()}
-        st.caption(f"Weights sum to {total:.2f} — normalized automatically")
+        if total > 0:
+            st.caption(f"Weights sum to {total:.2f} — normalized automatically")
+        else:
+            st.warning("All weights are zero, so every address scores 0.")
 
     tab_single, tab_compare = st.tabs(["Score an Address", "Compare Addresses"])
 
@@ -81,7 +103,9 @@ def render() -> None:
 
         if "city_scorecard" in st.session_state:
             card: ScorecardResult = st.session_state.city_scorecard
-            result = card.result
+            # Re-weighted on every run, so moving a slider updates the score
+            # shown instead of leaving the one computed at click time.
+            result = apply_weights(card.result.breakdown, normalized_weights)
 
             col_score, col_chart = st.columns([1, 2])
 
@@ -126,8 +150,10 @@ def render() -> None:
             if not address_a.strip() or not address_b.strip():
                 st.warning("Enter both addresses first.")
             else:
-                st.session_state.pop("compare_a", None)
-                st.session_state.pop("compare_b", None)
+                # Errors too: a failure from an earlier comparison would
+                # otherwise keep showing next to this run's results.
+                for key in ("compare_a", "compare_b", "compare_a_error", "compare_b_error"):
+                    st.session_state.pop(key, None)
                 try:
                     with st.spinner(f"Scoring {address_a}..."):
                         st.session_state.compare_a = run_scorecard(address_a, normalized_weights)
@@ -141,10 +167,15 @@ def render() -> None:
 
         card_a = st.session_state.get("compare_a")
         card_b = st.session_state.get("compare_b")
+        error_a = st.session_state.get("compare_a_error")
+        error_b = st.session_state.get("compare_b_error")
+        result_a = apply_weights(card_a.result.breakdown, normalized_weights) if card_a else None
+        result_b = apply_weights(card_b.result.breakdown, normalized_weights) if card_b else None
 
-        if card_a or card_b:
+        # Errors count too: when both addresses failed, this used to show nothing.
+        if card_a or card_b or error_a or error_b:
             if card_a and card_b:
-                score_a, score_b = card_a.result.overall, card_b.result.overall
+                score_a, score_b = result_a.overall, result_b.overall
                 if score_a > score_b:
                     st.success(f"**{card_a.address}** scores higher ({score_a:.0f} vs {score_b:.0f})")
                 elif score_b > score_a:
@@ -153,32 +184,32 @@ def render() -> None:
                     st.info(f"Tied at {score_a:.0f}")
 
             col_a_out, col_b_out = st.columns(2)
-            for col, card, error_key in (
-                (col_a_out, card_a, "compare_a_error"),
-                (col_b_out, card_b, "compare_b_error"),
+            for col, card, result, error in (
+                (col_a_out, card_a, result_a, error_a),
+                (col_b_out, card_b, result_b, error_b),
             ):
                 with col:
                     if card:
                         st.subheader(card.address)
-                        _render_score_card(card.result)
-                    elif st.session_state.get(error_key):
-                        st.error(st.session_state[error_key])
+                        _render_score_card(result)
+                    elif error:
+                        st.error(error)
 
             if card_a and card_b:
                 st.subheader("Category Breakdown")
                 chart_data = {
                     CATEGORY_LABELS[cat]: {
-                        card_a.address: card_a.result.breakdown[cat].combined,
-                        card_b.address: card_b.result.breakdown[cat].combined,
+                        card_a.address: result_a.breakdown[cat].combined,
+                        card_b.address: result_b.breakdown[cat].combined,
                     }
-                    for cat in card_a.result.breakdown
+                    for cat in result_a.breakdown
                 }
                 st.bar_chart(pd.DataFrame(chart_data).T, stack=False)
 
             col_map_a, col_map_b = st.columns(2)
-            for col, card, map_key in (
-                (col_map_a, card_a, "map_a"),
-                (col_map_b, card_b, "map_b"),
+            for col, card, result, map_key in (
+                (col_map_a, card_a, result_a, "map_a"),
+                (col_map_b, card_b, result_b, "map_b"),
             ):
                 with col:
                     if card:
@@ -190,23 +221,20 @@ def render() -> None:
                             card.walk_polygon,
                             card.bike_polygon,
                             card.amenities,
-                            card.result,
+                            result,
                         )
                         st_folium(fmap, width=None, height=450, returned_objects=[], key=map_key)
 
             col_details_a, col_details_b = st.columns(2)
-            for col, card in ((col_details_a, card_a), (col_details_b, card_b)):
+            for col, card, result in ((col_details_a, card_a, result_a), (col_details_b, card_b, result_b)):
                 with col:
                     if card:
                         with st.expander(f"Category details — {card.address}"):
-                            _render_category_details(card.result)
+                            _render_category_details(result)
 
 
 if __name__ == "__main__":
     st.set_page_config(page_title="City Scorecard", page_icon="🏙️", layout="wide")
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from common.auth import check_password
     if check_password("City Scorecard"):
         render()
