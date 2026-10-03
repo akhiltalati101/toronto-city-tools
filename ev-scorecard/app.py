@@ -1,3 +1,4 @@
+import re
 import sys
 from pathlib import Path
 
@@ -26,6 +27,13 @@ NRCAN_COSTS_GUIDE_URL = (
     "https://natural-resources.canada.ca/energy-efficiency/transportation-energy-efficiency/"
     "zero-emission-vehicles/electric-vehicle-charging-costs-ev-charging"
 )
+
+
+def _address_key(address: str) -> str:
+    """Normalize an address for "is this the one we already scored?" checks,
+    so a change in case, spacing, or commas alone doesn't re-run the pipeline."""
+    return re.sub(r"[\s,]+", " ", address).strip().casefold()
+
 
 def _render_charger_access_card(access_result, connectors_selected: bool) -> None:
     if not connectors_selected:
@@ -146,7 +154,7 @@ def render() -> None:
     # toggle — the score below is driven by session_state.selected_connectors,
     # a snapshot taken at click time, not by current_selection directly. The
     # full pipeline (geocode, Overpass, isochrone) only re-runs when the address
-    # text actually changed; a connector-only re-check just re-scores the
+    # actually changed (see _address_key); a connector-only re-check just re-scores the
     # already-fetched chargers using the cached walk_graph/reachable.
     if check_clicked:
         if not address.strip():
@@ -154,14 +162,14 @@ def render() -> None:
         else:
             try:
                 with st.spinner("Checking address..."):
-                    if st.session_state.get("scorecard_address") != address:
+                    if st.session_state.get("ev_scorecard_address") != _address_key(address):
                         st.session_state.ev_scorecard = run_scorecard(address)
-                        st.session_state.scorecard_address = address
+                        st.session_state.ev_scorecard_address = _address_key(address)
                 st.session_state.selected_connectors = current_selection
             except ValueError as e:
                 st.error(str(e))
                 st.session_state.pop("ev_scorecard", None)
-                st.session_state.pop("scorecard_address", None)
+                st.session_state.pop("ev_scorecard_address", None)
 
     if "ev_scorecard" in st.session_state and "selected_connectors" in st.session_state:
         card: ScorecardResult = st.session_state.ev_scorecard
