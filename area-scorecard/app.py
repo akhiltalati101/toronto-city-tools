@@ -1,9 +1,17 @@
+import sys
+from pathlib import Path
+
 import streamlit as st
 from streamlit_folium import st_folium
 
-from mapview import render_scorecard_map
-from pipeline import AreaScorecard, run_scorecard
-from safety import GRADE_COLORS as SAFETY_GRADE_COLORS
+# Repo root, for `common` — the hub already adds it, but a standalone
+# `streamlit run area-scorecard/app.py` needs it before rental.py imports.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from mapview import render_scorecard_map  # noqa: E402
+from pipeline import AreaScorecard, run_scorecard  # noqa: E402
+from rental import NOT_APARTMENT, UNKNOWN  # noqa: E402
+from safety import GRADE_COLORS as SAFETY_GRADE_COLORS  # noqa: E402
 
 def _rentsafe_color(score: int) -> str:
     if score >= 80:
@@ -44,8 +52,18 @@ def _render_safety_card(safety) -> None:
 
 def _render_rental_card(rental) -> None:
     building = rental.building
-    if not building.is_apartment:
+    if building.status == NOT_APARTMENT:
         st.info(f"🏠 {building.note}")
+        return
+
+    if building.status == UNKNOWN:
+        st.info(
+            f"🏢 {building.note} It isn't registered with RentSafeTO either, so it's likely not a "
+            "rental apartment building — it may be a house, a small rental, or an owner-occupied "
+            "condo, which RentSafeTO doesn't cover."
+        )
+        if rental.facebook_search_url:
+            st.link_button("Search Facebook groups for this building", rental.facebook_search_url)
         return
 
     if rental.rentsafe:
@@ -112,9 +130,10 @@ def render() -> None:
               count for more than minor theft) and compared to what you'd expect for an area that
               size if it matched the citywide rate. Incident locations are offset to the nearest
               intersection for privacy, so treat this as directional, not address-precise.
-            - **Rental building quality** — if the address looks like an apartment/condo building,
-              its official RentSafeTO evaluation score (elevators, security, cleanliness, etc.) if
-              it's a registered rental. RentSafeTO doesn't cover owner-occupied condo corporations.
+            - **Rental building quality** — if the address is a registered rental apartment
+              building, its official RentSafeTO evaluation score (elevators, security, cleanliness,
+              etc.). RentSafeTO doesn't cover owner-occupied condo corporations, so an unregistered
+              apartment building is most likely a condo.
             """
         )
 
@@ -153,9 +172,6 @@ def render() -> None:
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Should I Live Here?", page_icon="🏘️", layout="wide")
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from common.auth import check_password
     if check_password("Should I Live Here?"):
         render()

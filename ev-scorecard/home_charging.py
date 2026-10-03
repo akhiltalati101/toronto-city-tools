@@ -11,29 +11,18 @@ the confidence level and note alongside the answer for exactly this reason.
 
 Queries Overpass live per address (a single small-radius lookup, unlike
 city-scorecard's original city-wide amenity queries) rather than needing a
-prebuilt buildings dataset.
+prebuilt buildings dataset. The lookup and tag classification live in
+common/buildings.py, shared with area-scorecard.
 """
 from dataclasses import dataclass
-from typing import Optional
 
-import requests
+from common.buildings import (
+    HOUSE, MULTI_UNIT, NON_RESIDENTIAL, TOWNHOUSE, classify, fetch_building,
+)
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-QUERY_RADIUS_M = 40
-# Overpass's frontend 406s requests carrying Python-requests' default
-# User-Agent — a descriptive one is also just good practice per OSM's usage
-# guidelines.
-REQUEST_HEADERS = {"User-Agent": "toronto-ev-scorecard"}
+USER_AGENT = "toronto-ev-scorecard"
 
-# Building types with a private driveway/garage in the typical case.
-HOUSE_TAGS = {"house", "detached", "semidetached_house", "bungalow", "cabin", "farm", "static_caravan"}
-# Building types where a driveway/garage is common but not guaranteed.
-CAVEAT_TAGS = {"terrace", "townhouse", "semi"}
-# Building types that typically don't include private parking.
-MULTI_UNIT_TAGS = {"apartments", "residential", "commercial", "retail", "office", "dormitory", "hotel", "industrial"}
-# 4+ storeys is treated as multi-unit regardless of tag — a badly-tagged
-# highrise shouldn't read as a single-family house.
-MULTI_UNIT_LEVEL_THRESHOLD = 4
+_LOWER_CONFIDENCE = {"high": "medium", "medium": "low", "low": "low"}
 
 
 @dataclass
@@ -44,39 +33,42 @@ class HomeChargingResult:
     note: str
 
 
-def _nearest_building(lat: float, lon: float) -> Optional[dict]:
-    query = f"""
-    [out:json][timeout:15];
-    (
-      way["building"](around:{QUERY_RADIUS_M},{lat},{lon});
-      relation["building"](around:{QUERY_RADIUS_M},{lat},{lon});
-    );
-    out tags center;
-    """
-    resp = None
-    for attempt in range(3):
-        try:
-            resp = requests.post(OVERPASS_URL, data={"data": query}, headers=REQUEST_HEADERS, timeout=20)
-            resp.raise_for_status()
-            break
-        except (requests.exceptions.HTTPError, requests.exceptions.Timeout):
-            resp = None
-    if resp is None:
-        raise ValueError("Building lookup service (Overpass) is unavailable right now — try again shortly.")
-
-    elements = resp.json().get("elements", [])
-    if not elements:
-        return None
-
-    def _dist_sq(el: dict) -> float:
-        center = el.get("center", {})
-        return (center.get("lat", 0) - lat) ** 2 + (center.get("lon", 0) - lon) ** 2
-
-    return min(elements, key=_dist_sq)
+def _classify_for_charging(kind: str, dwelling_type: str) -> HomeChargingResult:
+    if kind == HOUSE:
+        return HomeChargingResult(
+            feasible=True, confidence="high", dwelling_type=dwelling_type,
+            note="Detached/semi-detached homes typically have a private driveway or garage suitable for a Level 2 home charger.",
+        )
+    if kind == TOWNHOUSE:
+        return HomeChargingResult(
+            feasible=True, confidence="medium", dwelling_type=dwelling_type,
+            note=(
+                "Townhouses/row houses often have a private driveway or garage, but it varies by unit — "
+                "confirm your own before assuming home charging is available."
+            ),
+        )
+    if kind == MULTI_UNIT:
+        return HomeChargingResult(
+            feasible=False, confidence="high", dwelling_type=dwelling_type,
+            note="This looks like multi-unit housing, which typically doesn't include private parking — checking public charging access instead.",
+        )
+    if kind == NON_RESIDENTIAL:
+        return HomeChargingResult(
+            feasible=False, confidence="high", dwelling_type=dwelling_type,
+            note="This building type typically doesn't include private parking — checking public charging access instead.",
+        )
+    return HomeChargingResult(
+        feasible=False, confidence="low", dwelling_type=dwelling_type,
+        note=(
+            f"Building type '{dwelling_type}' isn't specific enough to determine home charging feasibility — "
+            "defaulting to public charging access. If you have a private driveway or garage, home charging is "
+            "likely available regardless."
+        ),
+    )
 
 
 def check_home_charging(lat: float, lon: float) -> HomeChargingResult:
-    building = _nearest_building(lat, lon)
+    building = fetch_building(lat, lon, USER_AGENT)
     if building is None:
         return HomeChargingResult(
             feasible=False, confidence="low", dwelling_type="unknown",
@@ -86,46 +78,15 @@ def check_home_charging(lat: float, lon: float) -> HomeChargingResult:
             ),
         )
 
-    tags = building.get("tags", {})
-    building_type = tags.get("building", "yes")
-    levels_raw = tags.get("building:levels")
-    try:
-        levels = float(levels_raw) if levels_raw else None
-    except ValueError:
-        levels = None
-
-    if levels is not None and levels >= MULTI_UNIT_LEVEL_THRESHOLD:
-        return HomeChargingResult(
-            feasible=False, confidence="high",
-            dwelling_type=f"{building_type} ({int(levels)} storeys)",
-            note="Building is tall enough to likely be multi-unit housing without private parking.",
-        )
-
-    if building_type in HOUSE_TAGS:
-        return HomeChargingResult(
-            feasible=True, confidence="high", dwelling_type=building_type,
-            note="Detached/semi-detached homes typically have a private driveway or garage suitable for a Level 2 home charger.",
-        )
-
-    if building_type in CAVEAT_TAGS:
-        return HomeChargingResult(
-            feasible=True, confidence="medium", dwelling_type=building_type,
-            note=(
-                "Townhouses/row houses often have a private driveway or garage, but it varies by unit — "
-                "confirm your own before assuming home charging is available."
-            ),
-        )
-
-    if building_type in MULTI_UNIT_TAGS:
-        return HomeChargingResult(
-            feasible=False, confidence="high", dwelling_type=building_type,
-            note="This building type typically doesn't include private parking — checking public charging access instead.",
-        )
-
-    return HomeChargingResult(
-        feasible=False, confidence="low", dwelling_type=building_type,
-        note=f"Building type '{building_type}' isn't specific enough to determine home charging feasibility — defaulting to public charging access.",
-    )
+    building_class = classify(building)
+    result = _classify_for_charging(building_class.kind, building_class.dwelling_type)
+    if not building.contains_point:
+        # The address didn't land inside any footprint, so this is the
+        # nearest building — usually right, but on a mixed block it can be
+        # the neighbour.
+        result.confidence = _LOWER_CONFIDENCE[result.confidence]
+        result.note += " (Based on the nearest mapped building — the address didn't fall inside a building outline.)"
+    return result
 
 
 if __name__ == "__main__":
