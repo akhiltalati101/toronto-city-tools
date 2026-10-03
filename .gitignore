@@ -16,4 +16,5 @@ area-scorecard/.areadata_cache/
 area-scorecard/build*/
 area-scorecard/.streamlit/secrets.toml
 hub/__pycache__
-hub/.streamlit/secrets.toml
+hub/.streamlit/secrets.toml__pycache__/
+.pytest_cache/
