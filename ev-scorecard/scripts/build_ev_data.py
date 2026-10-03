@@ -52,7 +52,7 @@ import requests
 from shapely.geometry import shape
 
 # Generous City of Toronto bounding box: (minx, miny, maxx, maxy) — mirrors
-# geocode.py's TORONTO_BBOX. Used for census tracts (and, historically, the
+# common/geocode.py's TORONTO_BBOX. Used for census tracts (and, historically, the
 # charging-station fetch) — everything downstream of this bbox is what the
 # app can actually score today.
 TORONTO_BBOX = (-79.64, 43.58, -79.11, 43.86)

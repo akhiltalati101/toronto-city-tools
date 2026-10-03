@@ -1,4 +1,3 @@
-import re
 import sys
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from streamlit_folium import st_folium
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from charger_access import CONNECTOR_LABELS, GRADE_COLORS, filter_by_connectors, score_charger_access  # noqa: E402
+from common.geocode import address_key  # noqa: E402
 from mapview import render_charger_access_map  # noqa: E402
 from pipeline import ScorecardResult, run_scorecard  # noqa: E402
 
@@ -27,12 +27,6 @@ NRCAN_COSTS_GUIDE_URL = (
     "https://natural-resources.canada.ca/energy-efficiency/transportation-energy-efficiency/"
     "zero-emission-vehicles/electric-vehicle-charging-costs-ev-charging"
 )
-
-
-def _address_key(address: str) -> str:
-    """Normalize an address for "is this the one we already scored?" checks,
-    so a change in case, spacing, or commas alone doesn't re-run the pipeline."""
-    return re.sub(r"[\s,]+", " ", address).strip().casefold()
 
 
 def _render_charger_access_card(access_result, connectors_selected: bool) -> None:
@@ -154,17 +148,18 @@ def render() -> None:
     # toggle — the score below is driven by session_state.selected_connectors,
     # a snapshot taken at click time, not by current_selection directly. The
     # full pipeline (geocode, Overpass, isochrone) only re-runs when the address
-    # actually changed (see _address_key); a connector-only re-check just re-scores the
-    # already-fetched chargers using the cached walk_graph/reachable.
+    # actually changed (ignoring case, spacing and commas — see address_key);
+    # a connector-only re-check just re-scores the already-fetched chargers
+    # using the cached walk_graph/reachable.
     if check_clicked:
         if not address.strip():
             st.warning("Enter an address first.")
         else:
             try:
                 with st.spinner("Checking address..."):
-                    if st.session_state.get("ev_scorecard_address") != _address_key(address):
+                    if st.session_state.get("ev_scorecard_address") != address_key(address):
                         st.session_state.ev_scorecard = run_scorecard(address)
-                        st.session_state.ev_scorecard_address = _address_key(address)
+                        st.session_state.ev_scorecard_address = address_key(address)
                 st.session_state.selected_connectors = current_selection
             except ValueError as e:
                 st.error(str(e))

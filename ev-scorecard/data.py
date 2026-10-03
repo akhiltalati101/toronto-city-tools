@@ -5,7 +5,7 @@
   scripts/build_ev_data.py (rebuilt periodically by
   .github/workflows/rebuild-ev-data.yml). See access_code on each row —
   scoring should filter to "public" (see charger_access.py); the app itself
-  still only accepts addresses within Toronto (see geocode.py).
+  still only accepts addresses within Toronto (see common/geocode.py).
 - Walk network graph: reuses city-scorecard's own release rather than
   rebuilding an identical citywide walk graph here — EV charging access only
   needs the same street network city-scorecard already builds and publishes
