@@ -1,9 +1,16 @@
+import sys
+from pathlib import Path
+
 import streamlit as st
 from streamlit_folium import st_folium
 
-from charger_access import CONNECTOR_LABELS, GRADE_COLORS, filter_by_connectors, score_charger_access
-from mapview import render_charger_access_map
-from pipeline import ScorecardResult, run_scorecard
+# Repo root, for `common` — the hub already adds it, but a standalone
+# `streamlit run ev-scorecard/app.py` needs it before home_charging.py imports.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from charger_access import CONNECTOR_LABELS, GRADE_COLORS, filter_by_connectors, score_charger_access  # noqa: E402
+from mapview import render_charger_access_map  # noqa: E402
+from pipeline import ScorecardResult, run_scorecard  # noqa: E402
 
 # Natural Resources Canada guidance on home Level 2 EV charger installation.
 # There's no federal home-charger rebate to link to (as of 2026, the federal
@@ -196,9 +203,6 @@ def render() -> None:
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Should I Own an EV?", page_icon="🔌", layout="wide")
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from common.auth import check_password
     if check_password("Should I Own an EV?"):
         render()
