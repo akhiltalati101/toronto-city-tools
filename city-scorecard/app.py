@@ -96,7 +96,7 @@ def render() -> None:
             missing = [cat for cat, s in result.breakdown.items() if s.combined < 50]
             if missing:
                 labels = ", ".join(CATEGORY_LABELS[c] for c in missing)
-                st.warning(f"⚠️ Below-average access: **{labels}**")
+                st.warning(f"Below-average access: **{labels}**")
 
             st.subheader("Map")
             fmap = render_map(
@@ -203,7 +203,7 @@ def render() -> None:
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="City Scorecard", page_icon="🏙️", layout="wide")
+    st.set_page_config(page_title="City Scorecard", page_icon=":material/location_city:", layout="wide")
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
