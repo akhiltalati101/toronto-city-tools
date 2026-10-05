@@ -1,46 +1,14 @@
-from dataclasses import dataclass
-
-import networkx as nx
-import osmnx as ox
-from shapely.geometry import MultiPoint, Polygon
+"""Walk and bike isochrones for this app — see common/isochrone.py."""
+from common.isochrone import IsochroneResult
+from common.isochrone import compute_isochrone as _compute_isochrone
 
 WALK_SPEED_KMH = 4.5
 BIKE_SPEED_KMH = 15.0
-TRAVEL_TIME_MIN = 15
-
-
-@dataclass
-class IsochroneResult:
-    polygon: Polygon
-    reachable: dict   # node_id -> travel time in seconds
-
-
-def _speed_for(network_type: str) -> float:
-    return BIKE_SPEED_KMH if network_type == "bike" else WALK_SPEED_KMH
 
 
 def compute_isochrone(G, lat: float, lon: float, network_type: str) -> IsochroneResult:
-    speed_kmh = _speed_for(network_type)
-    cutoff_sec = TRAVEL_TIME_MIN * 60
-
-    for _, _, data in G.edges(data=True):
-        data["travel_time"] = data["length"] / (speed_kmh * 1000 / 3600)
-
-    center_node = ox.nearest_nodes(G, lon, lat)
-
-    reachable = nx.single_source_dijkstra_path_length(
-        G, center_node, cutoff=cutoff_sec, weight="travel_time"
-    )
-
-    node_coords = [
-        (G.nodes[n]["x"], G.nodes[n]["y"]) for n in reachable
-    ]
-
-    if len(node_coords) < 3:
-        raise ValueError("Too few reachable nodes to form an isochrone polygon.")
-
-    polygon = MultiPoint(node_coords).convex_hull
-    return IsochroneResult(polygon=polygon, reachable=dict(reachable))
+    speed_kmh = BIKE_SPEED_KMH if network_type == "bike" else WALK_SPEED_KMH
+    return _compute_isochrone(G, lat, lon, speed_kmh)
 
 
 if __name__ == "__main__":

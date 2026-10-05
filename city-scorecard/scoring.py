@@ -112,7 +112,14 @@ def score_amenities(
             nearest_min=round(nearest_sec / 60, 1) if nearest_sec is not None else None,
         )
 
-    overall = round(sum(breakdown[cat].combined * weights[cat] for cat in breakdown), 1)
+    return apply_weights(breakdown, weights)
+
+
+def apply_weights(breakdown: dict[str, CategoryScore], weights: dict[str, float]) -> ScoreResult:
+    """Combine per-category scores into an overall score. The breakdown doesn't
+    depend on weights, so the app re-runs just this when sliders move instead
+    of re-running the whole pipeline."""
+    overall = round(sum(s.combined * weights[cat] for cat, s in breakdown.items()), 1)
     return ScoreResult(overall=overall, breakdown=breakdown, weights=weights, grade=_grade(overall))
 
 
