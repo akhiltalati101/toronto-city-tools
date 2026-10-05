@@ -3,7 +3,7 @@ from pathlib import Path
 
 import streamlit as st
 
-st.set_page_config(page_title="Toronto City Tools", page_icon="🏙️", layout="wide")
+st.set_page_config(page_title="Toronto City Tools", page_icon=":material/location_city:", layout="wide")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -18,19 +18,19 @@ if not check_password("Toronto City Tools"):
 area_page = st.Page(
     load_app_page("area-scorecard"),
     title="Should I Live Here?",
-    icon="🏘️",
+    icon=":material/holiday_village:",
     url_path="area-scorecard",
 )
 city_page = st.Page(
     load_app_page("city-scorecard"),
     title="City Scorecard",
-    icon="🏙️",
+    icon=":material/location_city:",
     url_path="city-scorecard",
 )
 ev_page = st.Page(
     load_app_page("ev-scorecard"),
     title="Should I Own an EV?",
-    icon="🔌",
+    icon=":material/ev_station:",
     url_path="ev-scorecard",
 )
 tool_pages = [city_page, ev_page, area_page]
@@ -38,7 +38,7 @@ tool_pages = [city_page, ev_page, area_page]
 landing_page = st.Page(
     lambda: render_landing(tool_pages),
     title="Home",
-    icon="🏠",
+    icon=":material/home:",
     url_path="home",
     default=True,
 )

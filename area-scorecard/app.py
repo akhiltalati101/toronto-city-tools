@@ -53,12 +53,12 @@ def _render_safety_card(safety) -> None:
 def _render_rental_card(rental) -> None:
     building = rental.building
     if building.status == NOT_APARTMENT:
-        st.info(f"🏠 {building.note}")
+        st.info(f"{building.note}")
         return
 
     if building.status == UNKNOWN:
         st.info(
-            f"🏢 {building.note} It isn't registered with RentSafeTO either, so it's likely not a "
+            f"{building.note} It isn't registered with RentSafeTO either, so it's likely not a "
             "rental apartment building — it may be a house, a small rental, or an owner-occupied "
             "condo, which RentSafeTO doesn't cover."
         )
@@ -89,7 +89,7 @@ def _render_rental_card(rental) -> None:
                 st.markdown(f"- **{category}**: {cat_score}/3")
     else:
         st.warning(
-            "🏢 This looks like an apartment/condo building, but it's not registered with "
+            "This looks like an apartment/condo building, but it's not registered with "
             "RentSafeTO. That program only covers rental apartment buildings — it does **not** "
             "cover owner-occupied condo corporations, so this is likely a condo, not a missing "
             "data point."
@@ -99,15 +99,15 @@ def _render_rental_card(rental) -> None:
 
 
 def _render_zoning_section(zoning_applications) -> None:
-    st.subheader("🏗️ Zoning & Development Applications Nearby")
+    st.subheader("Zoning & Development Applications Nearby")
     if not zoning_applications:
         st.info("No active zoning or development applications found within 400m of this address.")
         return
 
     for zd in zoning_applications:
         app = zd.application
-        icon = "🏗️" if app.is_major else "📄"
-        with st.expander(f"{icon} {app.address} — {app.folder_type} ({app.status})"):
+        prefix = "Major: " if app.is_major else ""
+        with st.expander(f"{prefix}{app.address} — {app.folder_type} ({app.status})"):
             st.write(zd.display_text)
             if app.aic_url:
                 st.link_button("View official application", app.aic_url)
@@ -171,7 +171,7 @@ def render() -> None:
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Should I Live Here?", page_icon="🏘️", layout="wide")
+    st.set_page_config(page_title="Should I Live Here?", page_icon=":material/holiday_village:", layout="wide")
     from common.auth import check_password
     if check_password("Should I Live Here?"):
         render()

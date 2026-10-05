@@ -34,7 +34,6 @@ def _render_charger_access_card(access_result, connectors_selected: bool) -> Non
         st.markdown(
             """
             <div style="text-align:center; padding: 24px; border-radius: 12px; background: #f5f5f5;">
-              <div style="font-size: 40px;">🔌❓</div>
               <div style="font-size: 16px; color: #555; margin-top: 8px;">
                 Select your car's connector type(s) below to see your compatible charging score.
               </div>
@@ -80,7 +79,7 @@ def _render_home_charging_panel(result) -> None:
     st.markdown(
         """
         <div style="padding: 16px 20px; border-radius: 12px; background: #e8f5e9; margin-top: 16px;">
-          <div style="font-size: 15px; font-weight: 700; color: #2e7d32;">🏡🔌 Home charging may also be available</div>
+          <div style="font-size: 15px; font-weight: 700; color: #2e7d32;">Home charging may also be available</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -205,7 +204,7 @@ def render() -> None:
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Should I Own an EV?", page_icon="🔌", layout="wide")
+    st.set_page_config(page_title="Should I Own an EV?", page_icon=":material/ev_station:", layout="wide")
     from common.auth import check_password
     if check_password("Should I Own an EV?"):
         render()
