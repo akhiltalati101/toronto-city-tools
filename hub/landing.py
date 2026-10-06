@@ -1,5 +1,5 @@
-"""Landing/picker page shown when the hub loads. Blurbs are copied verbatim
-from PROJECTS.md's per-tool intro paragraphs.
+"""Landing/picker page shown when the hub loads. Blurbs match the opening
+sentences of PROJECTS.md's per-tool intro paragraphs.
 """
 
 from __future__ import annotations
@@ -12,25 +12,22 @@ TOOLS = [
     {
         "title": "City Scorecard",
         "blurb": (
-            "Score any address in Toronto on how well it meets the 15-minute city "
-            "standard — groceries, healthcare, parks, schools, transit, and fitness "
-            "all within a short trip."
+            "Score any Toronto address on the 15-minute city standard: groceries, "
+            "healthcare, parks, schools, transit, and fitness within a short trip."
         ),
     },
     {
         "title": "Should I Own an EV?",
         "blurb": (
-            "Check any Toronto address for whether it's realistic to own an EV "
-            "there. First question: can you charge at home? If not, the app scores "
-            "public charging access instead."
+            "Can you charge an EV at this Toronto address? Checks home charging, "
+            "or public charging access if home isn't an option."
         ),
     },
     {
         "title": "Should I Live Here?",
         "blurb": (
-            "Check any Toronto address for what's changing nearby, how it compares "
-            "on safety, and — if it's a rental apartment — its official maintenance "
-            "record."
+            "See what's changing near any Toronto address, how it compares on "
+            "safety, and the maintenance record if it's a rental apartment."
         ),
     },
 ]
