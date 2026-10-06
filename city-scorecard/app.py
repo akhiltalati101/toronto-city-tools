@@ -49,23 +49,60 @@ def _weight_key(cat: str) -> str:
 
 
 def _apply_preset() -> None:
-    """Load the selected preset into the sliders. Runs as a widget callback,
-    i.e. before the sliders are drawn, which is the only point where their
-    session_state values can be set."""
+    """Load the selected preset into the weight inputs (as whole percents).
+    Runs as a widget callback, i.e. before the inputs are drawn, which is the
+    only point where their session_state values can be set."""
     for cat, weight in PROFILES[st.session_state.profile].items():
-        st.session_state[_weight_key(cat)] = weight
+        st.session_state[_weight_key(cat)] = round(weight * 100)
+    # Presets sum to 100; set here so the fragment doesn't see it as a change
+    # and trigger a second, redundant rerun.
+    st.session_state.valid_weights = dict(PROFILES[st.session_state.profile])
+
+
+def _weights_total() -> int:
+    return sum(st.session_state[_weight_key(cat)] for cat in PROFILES["General"])
+
+
+@st.fragment
+def _weight_inputs() -> None:
+    """Weight boxes + live total. A fragment, so typing in a box reruns only
+    this block: the score and map below aren't redrawn (and don't flicker)
+    while the total is off. A full rerun happens only once the total is 100
+    and the weights actually differ from the ones in use."""
+    st.caption("Enter each category's share in %. Must total 100.")
+    percents = {
+        cat: st.number_input(
+            CATEGORY_LABELS[cat], min_value=0, max_value=100, step=5, key=_weight_key(cat)
+        )
+        for cat in PROFILES["General"]
+    }
+    total = sum(percents.values())
+    if total != 100:
+        diff = 100 - total
+        st.error(
+            f"Total: {total}% — {'add' if diff > 0 else 'remove'} {abs(diff)}% "
+            "to reach 100%. Scoring is paused."
+        )
+        return
+
+    st.success("Total: 100%")
+    new = {k: v / 100 for k, v in percents.items()}
+    previous = st.session_state.get("valid_weights")
+    st.session_state.valid_weights = new
+    if previous is not None and previous != new:
+        st.rerun()
 
 
 def render() -> None:
     st.title("City Scorecard")
     st.caption("Score any Toronto address on the 15-minute city standard.")
 
-    # The sliders are keyed so a preset change can move them: unkeyed, they
+    # The inputs are keyed so a preset change can move them: unkeyed, they
     # kept their own values and the preset dropdown silently did nothing
     # until "Reset" was clicked.
     st.session_state.setdefault("profile", "General")
     for cat, weight in PROFILES[st.session_state.profile].items():
-        st.session_state.setdefault(_weight_key(cat), weight)
+        st.session_state.setdefault(_weight_key(cat), round(weight * 100))
 
     with st.sidebar:
         st.header("Profile")
@@ -73,16 +110,10 @@ def render() -> None:
         st.button("Reset weights to preset", on_click=_apply_preset)
 
         st.header("Fine-tune weights")
-        weights = {
-            cat: st.slider(CATEGORY_LABELS[cat], 0.0, 1.0, step=0.05, key=_weight_key(cat))
-            for cat in PROFILES["General"]
-        }
-        total = sum(weights.values())
-        normalized_weights = {k: (v / total if total > 0 else 0) for k, v in weights.items()}
-        if total > 0:
-            st.caption(f"Weights sum to {total:.2f} — normalized automatically")
-        else:
-            st.warning("All weights are zero, so every address scores 0.")
+        _weight_inputs()
+        # Set by the fragment above: the presets sum to 100, so the first run
+        # is valid. While the boxes total != 100 this stays the last valid set.
+        normalized_weights = st.session_state.valid_weights
 
     tab_single, tab_compare = st.tabs(["Score an Address", "Compare Addresses"])
 
@@ -91,7 +122,9 @@ def render() -> None:
         score_clicked = st.button("Score It", type="primary")
 
         if score_clicked:
-            if not address.strip():
+            if _weights_total() != 100:
+                st.warning("Weights must total 100% before scoring.")
+            elif not address.strip():
                 st.warning("Enter an address first.")
             else:
                 try:
@@ -103,7 +136,7 @@ def render() -> None:
 
         if "city_scorecard" in st.session_state:
             card: ScorecardResult = st.session_state.city_scorecard
-            # Re-weighted on every run, so moving a slider updates the score
+            # Re-weighted on every run, so editing a weight updates the score
             # shown instead of leaving the one computed at click time.
             result = apply_weights(card.result.breakdown, normalized_weights)
 
@@ -132,7 +165,7 @@ def render() -> None:
                 card.amenities,
                 result,
             )
-            st_folium(fmap, width=None, height=550, returned_objects=[])
+            st_folium(fmap, width=None, height=550, returned_objects=[], key="map_single")
 
             with st.expander("Category details"):
                 _render_category_details(result)
@@ -147,7 +180,9 @@ def render() -> None:
         compare_clicked = st.button("Compare", type="primary")
 
         if compare_clicked:
-            if not address_a.strip() or not address_b.strip():
+            if _weights_total() != 100:
+                st.warning("Weights must total 100% before comparing.")
+            elif not address_a.strip() or not address_b.strip():
                 st.warning("Enter both addresses first.")
             else:
                 # Errors too: a failure from an earlier comparison would
