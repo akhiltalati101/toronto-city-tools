@@ -12,6 +12,8 @@ import re
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from geopy.geocoders import Photon
 
+from common.address_norm import normalize
+
 TORONTO_BBOX = (-79.64, 43.58, -79.11, 43.86)  # (minx, miny, maxx, maxy)
 
 
@@ -48,8 +50,11 @@ def geocode_address(address: str, user_agent: str, city_bias: str = "Toronto, On
 
 def address_key(address: str) -> str:
     """Normalize an address for "is this the one we already scored?" checks,
-    so a change in case, spacing, or commas alone doesn't count as new."""
-    return re.sub(r"[\s,]+", " ", address).strip().casefold()
+    so a change in case, spacing, commas, street-type spelling ("Street" vs
+    "St"), unit number or trailing city alone doesn't count as new. Shares
+    common.address_norm with the autocomplete index, so a picked suggestion
+    and the same address typed by hand compare equal."""
+    return normalize(address) or re.sub(r"[\s,]+", " ", address).strip().casefold()
 
 
 if __name__ == "__main__":
