@@ -15,7 +15,7 @@ the end of the street name, so "St Clair Ave W" and "Avenue Rd" keep their
 leading "st" / "avenue". No fuzzy matching: typos are not corrected.
 """
 import re
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 # Every spelling maps to one canonical (short) form, applied to both the
 # index and the query, so it doesn't matter which form the city data uses.
@@ -66,7 +66,7 @@ _NUMBER = re.compile(r"^(\d+)([a-z]?)$")
 
 
 class ParsedAddress(NamedTuple):
-    number: int | None
+    number: Optional[int]
     suffix: str  # "a" for "12A"; "" when none
     street: str  # normalized street name, e.g. "queen st w"
 
