@@ -131,3 +131,5 @@ def test_app_wrappers_use_their_own_user_agent(photon, app):
 def test_address_key():
     assert geocode.address_key("  100 Queen St W, Toronto ") == geocode.address_key("100 queen st w toronto")
     assert geocode.address_key("100 Queen St W") != geocode.address_key("100 Queen St E")
+    assert geocode.address_key("100 Queen Street West") == geocode.address_key("100 Queen St W")
+    assert geocode.address_key("100 Queen St W #305") == geocode.address_key("100 Queen St W")
