@@ -2,7 +2,7 @@ name: Rebuild zoning summaries
 
 # OPTIONAL citywide pre-warm: the app itself now summarizes zoning
 # applications live, on first view, and caches the result for the life of
-# the running process (see pipeline.py). This workflow exists only so a
+# the running process (see toronto_tools/area/pipeline.py). This workflow exists only so a
 # popular address's first-ever view doesn't wait on a handful of live LLM
 # calls — it regenerates plain-English summaries for all active
 # applications (scripts/build_zoning_summaries.py) and publishes them as a
@@ -28,9 +28,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: area-scorecard
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +36,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
 
       - name: Build zoning summaries
         env:

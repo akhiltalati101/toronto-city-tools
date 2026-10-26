@@ -12,7 +12,9 @@ Each category is scored on two dimensions:
 - **Proximity** (60%) — how far is the nearest amenity of this type, measured along real streets
 - **Variety** (40%) — how many options are available within the isochrone
 
-Scores are personalised by profile (General, Family, Senior, Car-Free, Student), with sliders to fine-tune weights.
+Scores are personalised by profile (General, Family, Senior, Car-Free, Student), with sliders to fine-tune weights — the score updates instantly as you drag.
+
+Amenities and the walk/bike street networks come from a citywide OpenStreetMap extract, prebuilt monthly by `scripts/build_city_data.py` (`.github/workflows/rebuild-city-data.yml`) rather than queried live.
 
 ## Amenity categories
 
@@ -25,79 +27,11 @@ Scores are personalised by profile (General, Family, Senior, Car-Free, Student),
 | Transit | Bus stops, subway entrances, train stations |
 | Fitness | Gyms, swimming pools, sports centres |
 
-## Stack
+## Code & running locally
 
-| Layer | Choice |
-|---|---|
-| **Core** | Python + [OSMnx](https://osmnx.readthedocs.io/) |
-| **Maps** | [Folium](https://python-visualization.github.io/folium/) |
-| **UI** | [Streamlit](https://streamlit.io/) |
-| **Data** | [OpenStreetMap](https://www.openstreetmap.org/) via [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) |
-
-## Project structure
-
-```
-city-scorecard/
-├── geocode.py      # Address → (lat, lon) via Nominatim
-├── network.py      # Street network download + disk cache (OSMnx)
-├── isochrone.py    # 15-min walk/bike reachability polygon + travel times
-├── amenities.py    # Overpass API queries by category
-├── scoring.py      # Proximity + variety scoring, profiles, grade
-├── mapview.py      # Folium map: isochrones, amenity markers, legend, score badge
-├── app.py          # Streamlit UI — the app entry point
-└── requirements.txt
-```
-
-## Getting Started
-
-**Prerequisites:** Python 3.9+
-
-### 1. Enter the directory
-
-```bash
-cd city-scorecard
-```
-
-### 2. Create the virtual environment
-
-```bash
-python3 -m venv .venv --without-pip
-source .venv/bin/activate
-curl https://bootstrap.pypa.io/get-pip.py | python
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Activate the venv (every new terminal session)
-
-```bash
-source .venv/bin/activate
-```
-
-You'll see `(.venv)` in your prompt when it's active.
-
-### 5. Set a password
-
-The app is gated behind a shared password, read from the hub's secrets file (run these from the repo root):
-
-```bash
-cp hub/.streamlit/secrets.toml.example hub/.streamlit/secrets.toml
-# edit hub/.streamlit/secrets.toml with your own password
-```
-
-### 6. Run the app
-
-This app is served through the hub. From the repo root:
-
-```bash
-streamlit run hub/hub_app.py
-```
+The scoring logic for this tool lives in `toronto_tools/city/` and is served by the API in `api/`; the UI is the `/city` page of the React app in `frontend/`. See the [README](../README.md) for the architecture and how to run both locally.
 
 ## Roadmap
 
 1. **Prototype** *(done)* — Streamlit app: geocode address, compute isochrone, score amenities, render Folium map
-2. **Product** — FastAPI backend + React + Mapbox frontend
+2. **Product** *(done)* — FastAPI backend + React + MapLibre frontend
