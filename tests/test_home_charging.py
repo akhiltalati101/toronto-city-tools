@@ -1,10 +1,8 @@
 import pytest
 
-from common import buildings
-from conftest import load_app_module
+from toronto_tools.common import buildings
+from toronto_tools.ev import home_charging
 from overpass_fixtures import at, way
-
-home_charging = load_app_module("ev-scorecard", "home_charging")
 
 
 @pytest.fixture

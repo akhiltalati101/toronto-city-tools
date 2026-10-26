@@ -3,11 +3,9 @@ import math
 import pandas as pd
 import pytest
 
-from common import buildings
-from conftest import load_app_module
+from toronto_tools.area import rental
+from toronto_tools.common import buildings
 from overpass_fixtures import at, way
-
-rental = load_app_module("area-scorecard", "rental")
 
 
 def _row(site, x=None, y=None, score=75, evaluated="2025-06-01", **extra):

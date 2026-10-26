@@ -6,7 +6,7 @@ nx = pytest.importorskip("networkx")
 pytest.importorskip("osmnx")
 pytest.importorskip("geopy")
 
-from common import geocode, isochrone  # noqa: E402
+from toronto_tools.common import geocode, isochrone  # noqa: E402
 from overpass_fixtures import ORIGIN_LAT, ORIGIN_LON, at  # noqa: E402
 
 
@@ -119,13 +119,25 @@ def test_geocode_service_errors_become_value_errors(photon):
             geocode.geocode_address("100 Queen St W", "agent-x")
 
 
-@pytest.mark.parametrize("app", ["city", "ev", "area"])
-def test_app_wrappers_use_their_own_user_agent(photon, app):
-    from conftest import load_app_module
+def test_default_user_agent(photon):
+    geocode.geocode_address("100 Queen St W")
+    assert photon.calls[-1][0] == geocode.USER_AGENT
 
-    module = load_app_module(f"{app}-scorecard", "geocode")
-    module.geocode_address("100 Queen St W")
-    assert photon.calls[-1][0] == f"toronto-{app}-scorecard"
+
+def test_resolve_location_uses_point_without_geocoding(photon):
+    assert geocode.resolve_location(None, 43.65, -79.38) == ("43.65000, -79.38000", 43.65, -79.38)
+    assert geocode.resolve_location("My place", 43.65, -79.38) == ("My place", 43.65, -79.38)
+    assert photon.calls == []
+
+
+def test_resolve_location_rejects_points_outside_toronto():
+    with pytest.raises(ValueError, match="outside"):
+        geocode.resolve_location(None, 45.42, -75.69)  # Ottawa
+
+
+def test_resolve_location_requires_an_address():
+    with pytest.raises(ValueError, match="address"):
+        geocode.resolve_location("   ")
 
 
 def test_address_key():

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toronto-city-tools"
+version = "2.0.0"
+description = "Scoring API behind the Toronto City Tools web app"
+requires-python = ">=3.11"
+dependencies = [
+    "cachetools==7.2.5",
+    "fastapi==0.162.0",
+    "geopandas==1.0.1",
+    "geopy==2.5.0",
+    "networkx==3.2.1",
+    "numpy==2.0.2",
+    "osmnx==2.0.7",
+    "pandas==2.3.3",
+    "pyarrow==21.0.0",
+    "requests==2.32.5",
+    # osmnx.nearest_nodes needs it for unprojected (lat/lon) graphs.
+    "scikit-learn==1.6.1",
+    "shapely==2.0.7",
+    "slowapi==0.1.10",
+    "uvicorn[standard]==0.54.0",
+]
+
+[project.optional-dependencies]
+dev = ["httpx==0.28.1", "pytest==9.1.1"]
+
+[tool.setuptools.packages.find]
+include = ["toronto_tools*", "api*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

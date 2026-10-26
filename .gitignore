@@ -3,19 +3,18 @@ claude-plans
 .scratchpad/
 .venv/
 .claude
-city-scorecard/__pycache__
-city-scorecard/.citydata_cache/
-city-scorecard/build*/
-city-scorecard/.streamlit/secrets.toml
-ev-scorecard/__pycache__
-ev-scorecard/.evdata_cache/
-ev-scorecard/build*/
-ev-scorecard/.streamlit/secrets.toml
-area-scorecard/__pycache__
-area-scorecard/.areadata_cache/
-area-scorecard/build*/
-area-scorecard/.streamlit/secrets.toml
-hub/__pycache__
-hub/.streamlit/secrets.toml
 __pycache__/
 .pytest_cache/
+*.egg-info/
+build/
+
+# Downloaded release datasets (see toronto_tools/common/release_data.py)
+.data_cache/
+
+# Local secrets
+.env
+.env.local
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

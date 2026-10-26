@@ -1,7 +1,7 @@
 import pytest
 import requests
 
-from common import buildings
+from toronto_tools.common import buildings
 from overpass_fixtures import at, split_relation, way
 
 
