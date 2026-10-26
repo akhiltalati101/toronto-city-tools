@@ -15,7 +15,6 @@
 """
 import io
 import threading
-from functools import lru_cache
 
 import pandas as pd
 import requests
@@ -34,7 +33,7 @@ RENTSAFE_CSV_URL = (
 )
 
 
-@lru_cache(maxsize=None)
+@cached({}, lock=threading.Lock())
 def get_zoning_summaries() -> dict:
     """Return {application_number: {"summary": str, "description_hash": str,
     "last_updated_date": str}}. Empty dict if the release/asset doesn't

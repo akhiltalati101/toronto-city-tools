@@ -1,0 +1,1193 @@
+{
+ "profiles": {
+  "General": {
+   "grocery": 0.2,
+   "healthcare": 0.2,
+   "parks": 0.15,
+   "schools": 0.15,
+   "transit": 0.2,
+   "fitness": 0.1
+  },
+  "Family": {
+   "grocery": 0.2,
+   "healthcare": 0.15,
+   "parks": 0.2,
+   "schools": 0.25,
+   "transit": 0.1,
+   "fitness": 0.1
+  },
+  "Senior": {
+   "grocery": 0.2,
+   "healthcare": 0.3,
+   "parks": 0.2,
+   "schools": 0.05,
+   "transit": 0.2,
+   "fitness": 0.05
+  },
+  "Car-Free": {
+   "grocery": 0.2,
+   "healthcare": 0.15,
+   "parks": 0.1,
+   "schools": 0.1,
+   "transit": 0.35,
+   "fitness": 0.1
+  },
+  "Student": {
+   "grocery": 0.15,
+   "healthcare": 0.1,
+   "parks": 0.1,
+   "schools": 0.25,
+   "transit": 0.25,
+   "fitness": 0.15
+  }
+ },
+ "connector_labels": {
+  "J1772": "J1772 (standard Level 2)",
+  "J1772COMBO": "CCS / J1772 Combo (DC fast)",
+  "CHADEMO": "CHAdeMO (DC fast)",
+  "TESLA": "Tesla (NACS / J3400)"
+ },
+ "city": [
+  {
+   "combined": {
+    "grocery": 100.0,
+    "healthcare": 100.0,
+    "parks": 100.0,
+    "schools": 100.0,
+    "transit": 100.0,
+    "fitness": 100.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.2,
+    "parks": 0.15,
+    "schools": 0.15,
+    "transit": 0.2,
+    "fitness": 0.1
+   },
+   "overall": 100.0,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 100.0,
+    "healthcare": 100.0,
+    "parks": 100.0,
+    "schools": 100.0,
+    "transit": 100.0,
+    "fitness": 100.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.2,
+    "schools": 0.25,
+    "transit": 0.1,
+    "fitness": 0.1
+   },
+   "overall": 100.0,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 100.0,
+    "healthcare": 100.0,
+    "parks": 100.0,
+    "schools": 100.0,
+    "transit": 100.0,
+    "fitness": 100.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.3,
+    "parks": 0.2,
+    "schools": 0.05,
+    "transit": 0.2,
+    "fitness": 0.05
+   },
+   "overall": 100.0,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 100.0,
+    "healthcare": 100.0,
+    "parks": 100.0,
+    "schools": 100.0,
+    "transit": 100.0,
+    "fitness": 100.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.1,
+    "schools": 0.1,
+    "transit": 0.35,
+    "fitness": 0.1
+   },
+   "overall": 100.0,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 100.0,
+    "healthcare": 100.0,
+    "parks": 100.0,
+    "schools": 100.0,
+    "transit": 100.0,
+    "fitness": 100.0
+   },
+   "weights": {
+    "grocery": 0.15,
+    "healthcare": 0.1,
+    "parks": 0.1,
+    "schools": 0.25,
+    "transit": 0.25,
+    "fitness": 0.15
+   },
+   "overall": 100.0,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 100.0,
+    "healthcare": 100.0,
+    "parks": 100.0,
+    "schools": 100.0,
+    "transit": 100.0,
+    "fitness": 100.0
+   },
+   "weights": {
+    "grocery": 0.05,
+    "healthcare": 0.05,
+    "parks": 0.6,
+    "schools": 0.1,
+    "transit": 0.15,
+    "fitness": 0.05
+   },
+   "overall": 100.0,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 100.0,
+    "healthcare": 100.0,
+    "parks": 100.0,
+    "schools": 100.0,
+    "transit": 100.0,
+    "fitness": 100.0
+   },
+   "weights": {
+    "grocery": 0.5,
+    "healthcare": 0.5,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "overall": 100.0,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 74.3,
+    "healthcare": 45.1,
+    "parks": 21.8,
+    "schools": 0.0,
+    "transit": 73.8,
+    "fitness": 12.7
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.2,
+    "parks": 0.15,
+    "schools": 0.15,
+    "transit": 0.2,
+    "fitness": 0.1
+   },
+   "overall": 43.2,
+   "grade": "D"
+  },
+  {
+   "combined": {
+    "grocery": 74.3,
+    "healthcare": 45.1,
+    "parks": 21.8,
+    "schools": 0.0,
+    "transit": 73.8,
+    "fitness": 12.7
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.2,
+    "schools": 0.25,
+    "transit": 0.1,
+    "fitness": 0.1
+   },
+   "overall": 34.6,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 74.3,
+    "healthcare": 45.1,
+    "parks": 21.8,
+    "schools": 0.0,
+    "transit": 73.8,
+    "fitness": 12.7
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.3,
+    "parks": 0.2,
+    "schools": 0.05,
+    "transit": 0.2,
+    "fitness": 0.05
+   },
+   "overall": 48.1,
+   "grade": "D"
+  },
+  {
+   "combined": {
+    "grocery": 74.3,
+    "healthcare": 45.1,
+    "parks": 21.8,
+    "schools": 0.0,
+    "transit": 73.8,
+    "fitness": 12.7
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.1,
+    "schools": 0.1,
+    "transit": 0.35,
+    "fitness": 0.1
+   },
+   "overall": 50.9,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 74.3,
+    "healthcare": 45.1,
+    "parks": 21.8,
+    "schools": 0.0,
+    "transit": 73.8,
+    "fitness": 12.7
+   },
+   "weights": {
+    "grocery": 0.15,
+    "healthcare": 0.1,
+    "parks": 0.1,
+    "schools": 0.25,
+    "transit": 0.25,
+    "fitness": 0.15
+   },
+   "overall": 38.2,
+   "grade": "D"
+  },
+  {
+   "combined": {
+    "grocery": 74.3,
+    "healthcare": 45.1,
+    "parks": 21.8,
+    "schools": 0.0,
+    "transit": 73.8,
+    "fitness": 12.7
+   },
+   "weights": {
+    "grocery": 0.05,
+    "healthcare": 0.05,
+    "parks": 0.6,
+    "schools": 0.1,
+    "transit": 0.15,
+    "fitness": 0.05
+   },
+   "overall": 30.8,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 74.3,
+    "healthcare": 45.1,
+    "parks": 21.8,
+    "schools": 0.0,
+    "transit": 73.8,
+    "fitness": 12.7
+   },
+   "weights": {
+    "grocery": 0.5,
+    "healthcare": 0.5,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "overall": 59.7,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 90.0,
+    "healthcare": 59.5,
+    "parks": 72.8,
+    "schools": 63.5,
+    "transit": 100.0,
+    "fitness": 92.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.2,
+    "parks": 0.15,
+    "schools": 0.15,
+    "transit": 0.2,
+    "fitness": 0.1
+   },
+   "overall": 79.5,
+   "grade": "B"
+  },
+  {
+   "combined": {
+    "grocery": 90.0,
+    "healthcare": 59.5,
+    "parks": 72.8,
+    "schools": 63.5,
+    "transit": 100.0,
+    "fitness": 92.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.2,
+    "schools": 0.25,
+    "transit": 0.1,
+    "fitness": 0.1
+   },
+   "overall": 76.6,
+   "grade": "B"
+  },
+  {
+   "combined": {
+    "grocery": 90.0,
+    "healthcare": 59.5,
+    "parks": 72.8,
+    "schools": 63.5,
+    "transit": 100.0,
+    "fitness": 92.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.3,
+    "parks": 0.2,
+    "schools": 0.05,
+    "transit": 0.2,
+    "fitness": 0.05
+   },
+   "overall": 78.2,
+   "grade": "B"
+  },
+  {
+   "combined": {
+    "grocery": 90.0,
+    "healthcare": 59.5,
+    "parks": 72.8,
+    "schools": 63.5,
+    "transit": 100.0,
+    "fitness": 92.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.1,
+    "schools": 0.1,
+    "transit": 0.35,
+    "fitness": 0.1
+   },
+   "overall": 84.8,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 90.0,
+    "healthcare": 59.5,
+    "parks": 72.8,
+    "schools": 63.5,
+    "transit": 100.0,
+    "fitness": 92.0
+   },
+   "weights": {
+    "grocery": 0.15,
+    "healthcare": 0.1,
+    "parks": 0.1,
+    "schools": 0.25,
+    "transit": 0.25,
+    "fitness": 0.15
+   },
+   "overall": 81.4,
+   "grade": "A"
+  },
+  {
+   "combined": {
+    "grocery": 90.0,
+    "healthcare": 59.5,
+    "parks": 72.8,
+    "schools": 63.5,
+    "transit": 100.0,
+    "fitness": 92.0
+   },
+   "weights": {
+    "grocery": 0.05,
+    "healthcare": 0.05,
+    "parks": 0.6,
+    "schools": 0.1,
+    "transit": 0.15,
+    "fitness": 0.05
+   },
+   "overall": 77.1,
+   "grade": "B"
+  },
+  {
+   "combined": {
+    "grocery": 90.0,
+    "healthcare": 59.5,
+    "parks": 72.8,
+    "schools": 63.5,
+    "transit": 100.0,
+    "fitness": 92.0
+   },
+   "weights": {
+    "grocery": 0.5,
+    "healthcare": 0.5,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "overall": 74.8,
+   "grade": "B"
+  },
+  {
+   "combined": {
+    "grocery": 0.0,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.2,
+    "parks": 0.15,
+    "schools": 0.15,
+    "transit": 0.2,
+    "fitness": 0.1
+   },
+   "overall": 0.0,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 0.0,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.2,
+    "schools": 0.25,
+    "transit": 0.1,
+    "fitness": 0.1
+   },
+   "overall": 0.0,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 0.0,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.3,
+    "parks": 0.2,
+    "schools": 0.05,
+    "transit": 0.2,
+    "fitness": 0.05
+   },
+   "overall": 0.0,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 0.0,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.1,
+    "schools": 0.1,
+    "transit": 0.35,
+    "fitness": 0.1
+   },
+   "overall": 0.0,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 0.0,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.15,
+    "healthcare": 0.1,
+    "parks": 0.1,
+    "schools": 0.25,
+    "transit": 0.25,
+    "fitness": 0.15
+   },
+   "overall": 0.0,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 0.0,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.05,
+    "healthcare": 0.05,
+    "parks": 0.6,
+    "schools": 0.1,
+    "transit": 0.15,
+    "fitness": 0.05
+   },
+   "overall": 0.0,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 0.0,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.5,
+    "healthcare": 0.5,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "overall": 0.0,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 50.05,
+    "healthcare": 64.95,
+    "parks": 35.0,
+    "schools": 80.0,
+    "transit": 49.95,
+    "fitness": 65.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.2,
+    "parks": 0.15,
+    "schools": 0.15,
+    "transit": 0.2,
+    "fitness": 0.1
+   },
+   "overall": 56.7,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 50.05,
+    "healthcare": 64.95,
+    "parks": 35.0,
+    "schools": 80.0,
+    "transit": 49.95,
+    "fitness": 65.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.2,
+    "schools": 0.25,
+    "transit": 0.1,
+    "fitness": 0.1
+   },
+   "overall": 58.2,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 50.05,
+    "healthcare": 64.95,
+    "parks": 35.0,
+    "schools": 80.0,
+    "transit": 49.95,
+    "fitness": 65.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.3,
+    "parks": 0.2,
+    "schools": 0.05,
+    "transit": 0.2,
+    "fitness": 0.05
+   },
+   "overall": 53.7,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 50.05,
+    "healthcare": 64.95,
+    "parks": 35.0,
+    "schools": 80.0,
+    "transit": 49.95,
+    "fitness": 65.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.1,
+    "schools": 0.1,
+    "transit": 0.35,
+    "fitness": 0.1
+   },
+   "overall": 55.2,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 50.05,
+    "healthcare": 64.95,
+    "parks": 35.0,
+    "schools": 80.0,
+    "transit": 49.95,
+    "fitness": 65.0
+   },
+   "weights": {
+    "grocery": 0.15,
+    "healthcare": 0.1,
+    "parks": 0.1,
+    "schools": 0.25,
+    "transit": 0.25,
+    "fitness": 0.15
+   },
+   "overall": 59.7,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 50.05,
+    "healthcare": 64.95,
+    "parks": 35.0,
+    "schools": 80.0,
+    "transit": 49.95,
+    "fitness": 65.0
+   },
+   "weights": {
+    "grocery": 0.05,
+    "healthcare": 0.05,
+    "parks": 0.6,
+    "schools": 0.1,
+    "transit": 0.15,
+    "fitness": 0.05
+   },
+   "overall": 45.5,
+   "grade": "D"
+  },
+  {
+   "combined": {
+    "grocery": 50.05,
+    "healthcare": 64.95,
+    "parks": 35.0,
+    "schools": 80.0,
+    "transit": 49.95,
+    "fitness": 65.0
+   },
+   "weights": {
+    "grocery": 0.5,
+    "healthcare": 0.5,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "overall": 57.5,
+   "grade": "C"
+  },
+  {
+   "combined": {
+    "grocery": 72.5,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.2,
+    "parks": 0.15,
+    "schools": 0.15,
+    "transit": 0.2,
+    "fitness": 0.1
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.5,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.2,
+    "schools": 0.25,
+    "transit": 0.1,
+    "fitness": 0.1
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.5,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.3,
+    "parks": 0.2,
+    "schools": 0.05,
+    "transit": 0.2,
+    "fitness": 0.05
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.5,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.1,
+    "schools": 0.1,
+    "transit": 0.35,
+    "fitness": 0.1
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.5,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.15,
+    "healthcare": 0.1,
+    "parks": 0.1,
+    "schools": 0.25,
+    "transit": 0.25,
+    "fitness": 0.15
+   },
+   "overall": 10.9,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.5,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.05,
+    "healthcare": 0.05,
+    "parks": 0.6,
+    "schools": 0.1,
+    "transit": 0.15,
+    "fitness": 0.05
+   },
+   "overall": 3.6,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.5,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.5,
+    "healthcare": 0.5,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "overall": 36.2,
+   "grade": "D"
+  },
+  {
+   "combined": {
+    "grocery": 72.7,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.2,
+    "parks": 0.15,
+    "schools": 0.15,
+    "transit": 0.2,
+    "fitness": 0.1
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.7,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.2,
+    "schools": 0.25,
+    "transit": 0.1,
+    "fitness": 0.1
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.7,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.3,
+    "parks": 0.2,
+    "schools": 0.05,
+    "transit": 0.2,
+    "fitness": 0.05
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.7,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.2,
+    "healthcare": 0.15,
+    "parks": 0.1,
+    "schools": 0.1,
+    "transit": 0.35,
+    "fitness": 0.1
+   },
+   "overall": 14.5,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.7,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.15,
+    "healthcare": 0.1,
+    "parks": 0.1,
+    "schools": 0.25,
+    "transit": 0.25,
+    "fitness": 0.15
+   },
+   "overall": 10.9,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.7,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.05,
+    "healthcare": 0.05,
+    "parks": 0.6,
+    "schools": 0.1,
+    "transit": 0.15,
+    "fitness": 0.05
+   },
+   "overall": 3.6,
+   "grade": "F"
+  },
+  {
+   "combined": {
+    "grocery": 72.7,
+    "healthcare": 0.0,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "weights": {
+    "grocery": 0.5,
+    "healthcare": 0.5,
+    "parks": 0.0,
+    "schools": 0.0,
+    "transit": 0.0,
+    "fitness": 0.0
+   },
+   "overall": 36.4,
+   "grade": "D"
+  }
+ ],
+ "ev": [
+  {
+   "walk_secs": [],
+   "expected": {
+    "combined": 0.0,
+    "proximity": 0.0,
+    "variety": 0.0,
+    "count": 0,
+    "nearest_min": null,
+    "grade": "F"
+   }
+  },
+  {
+   "walk_secs": [
+    null,
+    null
+   ],
+   "expected": {
+    "combined": 8.0,
+    "proximity": 0.0,
+    "variety": 20.0,
+    "count": 2,
+    "nearest_min": null,
+    "grade": "F"
+   }
+  },
+  {
+   "walk_secs": [
+    120.0
+   ],
+   "expected": {
+    "combined": 64.0,
+    "proximity": 100.0,
+    "variety": 10.0,
+    "count": 1,
+    "nearest_min": 2.0,
+    "grade": "C"
+   }
+  },
+  {
+   "walk_secs": [
+    299.9,
+    600.0,
+    null
+   ],
+   "expected": {
+    "combined": 72.0,
+    "proximity": 100.0,
+    "variety": 30.0,
+    "count": 3,
+    "nearest_min": 5.0,
+    "grade": "B"
+   }
+  },
+  {
+   "walk_secs": [
+    300.1
+   ],
+   "expected": {
+    "combined": 64.0,
+    "proximity": 100.0,
+    "variety": 10.0,
+    "count": 1,
+    "nearest_min": 5.0,
+    "grade": "C"
+   }
+  },
+  {
+   "walk_secs": [
+    450.0,
+    610.0,
+    700.0,
+    800.0
+   ],
+   "expected": {
+    "combined": 61.0,
+    "proximity": 75.0,
+    "variety": 40.0,
+    "count": 4,
+    "nearest_min": 7.5,
+    "grade": "C"
+   }
+  },
+  {
+   "walk_secs": [
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0,
+    899.0
+   ],
+   "expected": {
+    "combined": 40.1,
+    "proximity": 0.2,
+    "variety": 100.0,
+    "count": 12,
+    "nearest_min": 15.0,
+    "grade": "D"
+   }
+  },
+  {
+   "walk_secs": [
+    600.0,
+    null
+   ],
+   "expected": {
+    "combined": 38.0,
+    "proximity": 50.0,
+    "variety": 20.0,
+    "count": 2,
+    "nearest_min": 10.0,
+    "grade": "D"
+   }
+  },
+  {
+   "walk_secs": [
+    15.0
+   ],
+   "expected": {
+    "combined": 64.0,
+    "proximity": 100.0,
+    "variety": 10.0,
+    "count": 1,
+    "nearest_min": 0.2,
+    "grade": "C"
+   }
+  },
+  {
+   "walk_secs": [
+    45.0
+   ],
+   "expected": {
+    "combined": 64.0,
+    "proximity": 100.0,
+    "variety": 10.0,
+    "count": 1,
+    "nearest_min": 0.8,
+    "grade": "C"
+   }
+  },
+  {
+   "walk_secs": [
+    630.0
+   ],
+   "expected": {
+    "combined": 31.0,
+    "proximity": 45.0,
+    "variety": 10.0,
+    "count": 1,
+    "nearest_min": 10.5,
+    "grade": "F"
+   }
+  }
+ ]
+}

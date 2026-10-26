@@ -68,7 +68,15 @@ def _classify_for_charging(kind: str, dwelling_type: str) -> HomeChargingResult:
 
 
 def check_home_charging(lat: float, lon: float) -> HomeChargingResult:
-    building = fetch_building(lat, lon, USER_AGENT)
+    # An Overpass outage degrades this supplementary check rather than
+    # failing the whole scorecard, same as area/rental.py.
+    try:
+        building = fetch_building(lat, lon, USER_AGENT)
+    except ValueError:
+        return HomeChargingResult(
+            feasible=False, confidence="low", dwelling_type="unknown",
+            note="The building lookup service (OpenStreetMap) didn't respond, so home charging couldn't be checked.",
+        )
     if building is None:
         return HomeChargingResult(
             feasible=False, confidence="low", dwelling_type="unknown",

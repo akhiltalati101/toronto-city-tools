@@ -38,8 +38,10 @@ def geocode_address(address: str, user_agent: str = USER_AGENT, city_bias: str =
         location = geolocator.geocode(query, timeout=10)
     except GeocoderTimedOut:
         raise ValueError(f"Geocoding timed out for: {address!r}")
-    except GeocoderServiceError as e:
-        raise ValueError(f"Geocoding service error: {e}")
+    except GeocoderServiceError:
+        # The exception text carries proxy/connection internals, not
+        # something to show a user.
+        raise ValueError("Geocoding service error — the address lookup service is unavailable right now. Try again shortly.")
 
     if location is None:
         raise ValueError(f"Address not found: {address!r}")

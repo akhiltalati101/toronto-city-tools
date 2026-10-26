@@ -52,3 +52,12 @@ def test_no_building(overpass):
     overpass()
     result = _check()
     assert (result.feasible, result.dwelling_type) == (False, "unknown")
+
+
+def test_overpass_outage_degrades_instead_of_failing(monkeypatch):
+    def _down(lat, lon, ua):
+        raise ValueError("Overpass is unavailable")
+    monkeypatch.setattr(home_charging, "fetch_building", _down)
+    result = _check()
+    assert (result.feasible, result.confidence, result.dwelling_type) == (False, "low", "unknown")
+    assert "didn't respond" in result.note

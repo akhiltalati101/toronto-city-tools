@@ -9,6 +9,7 @@
 - Walk network graph: reuses the city tool's graph (city/data.py) rather
   than a second identical citywide walk graph.
 """
+import threading
 from functools import lru_cache
 
 import geopandas as gpd
@@ -20,7 +21,14 @@ RELEASE_TAG = "ev-data"
 CHARGERS_ASSET = "toronto_chargers.geoparquet"
 
 
+_load_lock = threading.Lock()
+
+
 @lru_cache(maxsize=None)
+def _load_charging_stations() -> gpd.GeoDataFrame:
+    return gpd.read_parquet(download(RELEASE_TAG, CHARGERS_ASSET))
+
+
 def get_charging_stations() -> gpd.GeoDataFrame:
     """Return the prebuilt charging stations GeoDataFrame.
 
@@ -30,7 +38,8 @@ def get_charging_stations() -> gpd.GeoDataFrame:
     two are free text from NREL, "Not listed" when the network doesn't
     report them).
     """
-    return gpd.read_parquet(download(RELEASE_TAG, CHARGERS_ASSET))
+    with _load_lock:
+        return _load_charging_stations()
 
 
 def get_walk_graph():
