@@ -32,11 +32,12 @@ Two small pieces of scoring also run in the browser, so the weight sliders and E
 
 ## Running locally
 
-**Prerequisites:** Python 3.11+, Node 22+.
+**Prerequisites:** Python 3.11+, Node 22+. On macOS the built-in `python3` is 3.9 with an old pip, which can't install this project — install a newer one first (e.g. `brew install python@3.12`) and check `python --version` inside the venv.
 
 ```bash
 # API — first start downloads ~250 MB of datasets into .data_cache/
-python3 -m venv .venv && source .venv/bin/activate
+python3.12 -m venv .venv && source .venv/bin/activate   # any Python 3.11+
+python -m pip install --upgrade pip
 pip install -e ".[dev]"
 uvicorn api.main:app --reload --port 8000
 
