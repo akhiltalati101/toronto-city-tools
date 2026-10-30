@@ -1,7 +1,13 @@
-import type { MapGeoJSONFeature } from "maplibre-gl";
+import { setWorkerUrl, type MapGeoJSONFeature } from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Map, { Marker, NavigationControl, type MapLayerMouseEvent, type MapRef } from "react-map-gl/maplibre";
 import { MAP_STYLE } from "../lib/constants";
+
+// MapLibre 6 loads its worker from a path relative to its own module, which
+// doesn't exist once Vite pre-bundles (dev) or bundles (build) the library —
+// the map then draws only the style background. Hand it Vite's URL instead.
+setWorkerUrl(workerUrl);
 
 const TORONTO = { latitude: 43.7, longitude: -79.39, zoom: 10 };
 
