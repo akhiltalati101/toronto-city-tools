@@ -3,7 +3,7 @@ name: Rebuild city data
 # Periodically rebuilds the citywide walk/bike network graphs and amenities
 # dataset (scripts/build_city_data.py) from a local OSM extract, and
 # publishes them as GitHub Release assets under the fixed "city-data" tag.
-# citydata.py downloads from that fixed URL at app startup.
+# toronto_tools/city/data.py downloads from that fixed URL at API startup.
 
 on:
   schedule:
@@ -16,9 +16,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: city-scorecard
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +27,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
 
       - name: Build city data
         run: python scripts/build_city_data.py --out build

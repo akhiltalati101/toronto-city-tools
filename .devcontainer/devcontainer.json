@@ -1,33 +1,23 @@
 {
-  "name": "Python 3",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "name": "Toronto City Tools",
   "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
   "customizations": {
-    "codespaces": {
-      "openFiles": [
-        "README.md",
-        "city-scorecard/app.py"
-      ]
-    },
+    "codespaces": { "openFiles": ["README.md"] },
     "vscode": {
-      "settings": {},
-      "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance"
-      ]
+      "extensions": ["ms-python.python", "ms-python.vscode-pylance", "dbaeumer.vscode-eslint", "bradlc.vscode-tailwindcss"]
     }
   },
-  "updateContentCommand": "[ -f packages.txt ] && sudo apt update && sudo apt upgrade -y && sudo xargs apt install -y <packages.txt; [ -f requirements.txt ] && pip3 install --user -r requirements.txt; pip3 install --user streamlit; echo '✅ Packages installed and Requirements met'",
+  "updateContentCommand": "pip3 install --user -e '.[dev]' && cd frontend && npm ci",
   "postAttachCommand": {
-    "server": "streamlit run city-scorecard/app.py --server.enableCORS false --server.enableXsrfProtection false"
+    "api": "uvicorn api.main:app --reload --port 8000",
+    "frontend": "cd frontend && npm run dev -- --host"
   },
   "portsAttributes": {
-    "8501": {
-      "label": "Application",
-      "onAutoForward": "openPreview"
-    }
+    "5173": { "label": "Frontend", "onAutoForward": "openPreview" },
+    "8000": { "label": "API" }
   },
-  "forwardPorts": [
-    8501
-  ]
+  "forwardPorts": [5173, 8000]
 }

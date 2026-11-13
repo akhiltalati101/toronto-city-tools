@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+/* Colors are tokens so dark mode is one block of overrides. */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f1f0ec;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-muted: #6f6d68;
+  --line: #e1e0d9;
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+  --good-bg: #e8f5e9;
+  --good-ink: #1b5e20;
+  --warn-bg: #fff4dc;
+  --warn-ink: #7a4d00;
+  --bad-bg: #fdeaea;
+  --bad-ink: #a12622;
+  --info-bg: #e9f1fb;
+  --info-ink: #1c4f8f;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --ink-muted: #9a9890;
+    --line: #2c2c2a;
+    --accent: #3987e5;
+    --accent-ink: #ffffff;
+    --good-bg: #13301a;
+    --good-ink: #9fdca6;
+    --warn-bg: #362a0d;
+    --warn-ink: #f3cf7a;
+    --bad-bg: #3a1514;
+    --bad-ink: #f3a3a0;
+    --info-bg: #13243a;
+    --info-ink: #a9c9f2;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+  }
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-good-bg: var(--good-bg);
+  --color-good-ink: var(--good-ink);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-ink: var(--warn-ink);
+  --color-bad-bg: var(--bad-bg);
+  --color-bad-ink: var(--bad-ink);
+  --color-info-bg: var(--info-bg);
+  --color-info-ink: var(--info-ink);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* MapLibre popups follow the app theme. */
+.maplibregl-popup-content {
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.18);
+  font: 13px/1.4 var(--font-sans);
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--surface);
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--surface);
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--surface);
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--surface);
+}
+.maplibregl-popup-close-button {
+  color: var(--ink-2);
+  font-size: 18px;
+  padding: 0 6px;
+}

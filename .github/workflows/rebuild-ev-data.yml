@@ -4,12 +4,12 @@ name: Rebuild EV data
 # income dataset (scripts/build_ev_data.py) from NREL's Alternative Fuel
 # Stations API (GTA-wide, public + private access) and Statistics Canada's
 # 2021 Census, and publishes them as GitHub Release assets under the fixed
-# "ev-data" tag. data.py downloads from that fixed URL at app startup.
+# "ev-data" tag. toronto_tools/ev/data.py downloads from that fixed URL at API startup.
 #
 # Requires an NREL_API_KEY repository secret (free key from
 # https://developer.nlr.gov/signup/).
 #
-# Runs less often than city-scorecard's rebuild-city-data.yml — charging
+# Runs less often than rebuild-city-data.yml — charging
 # station counts and census data both change slowly.
 
 on:
@@ -23,9 +23,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ev-scorecard
     steps:
       - uses: actions/checkout@v4
 
@@ -34,7 +31,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
 
       - name: Build EV data
         env:
